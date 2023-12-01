@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add User</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .defaultForm {
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            max-width: 350px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .defaultFormSubBlock {
+            margin-bottom: 15px;
+        }
+
+        .defaultFormLabel {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .defaultInputBar,
+        .defaultDropDown {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .defaultDropDown {
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .defaultButton {
+            padding: 10px;
+            background-color: #1fa8b6;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .error-div{
+            color: red;
+            max-width: 300px;
+            margin: 0 auto;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../includes/adminNavigationBar.ejs') %>
+    <h1>Add User</h1>
+    <%if(error) {%>
+        <div class = "error-div">
+            <%= error.msg %>
+        </div>
+    <%}%>
+    <form class="defaultForm" action="/admin/addUser" method="post">
+        <div class="defaultFormSubBlock">
+            <label class="defaultFormLabel" for="username">Username</label>
+            <input name="username" placeholder="Username" class="defaultInputBar" id="username" value = "<%=oldInput.username%>" required>
+        </div>
+        <div class="defaultFormSubBlock">
+            <label class="defaultFormLabel" for="email">Email</label>
+            <input name="email" placeholder="Email" class="defaultInputBar" id="email" type="email" value = "<%=oldInput.email%>" required>
+        </div>
+        <div class="defaultFormSubBlock">
+            <label class="defaultFormLabel" for="contactNumber">Contact Number</label>
+            <input name="contactNumber" placeholder="Contact Number" class="defaultInputBar" id="contactNumber" value = "<%=oldInput.contactNumber%>" required>
+        </div>
+        <div class="defaultFormSubBlock">
+            <label class="defaultFormLabel" for="userType">User Type</label>
+            <select class="defaultDropDown" name="userType" id="userType" required>
+                <option value="Faculty" <%if(oldInput.userType === "Faculty"){%>selected <%}%>>Faculty</option>
+                <option value="Visiting / Guest Faculty" <%if(oldInput.userType === "Visiting / Guest Faculty"){%>selected <%}%>>Visiting / Guest Faculty</option>
+                <option value="Permanent Staff" <%if(oldInput.userType === "Permanent Staff"){%>selected <%}%>>Staff (Permanent)</option>
+                <option value="Contractual Staff" <%if(oldInput.userType === "Contractual Staff"){%>selected <%}%>>Staff (Contractual)</option>
+                <option value="Research Scholars/PhD" <%if(oldInput.userType === "Research Scholars/PhD"){%>selected <%}%>>Research Scholars/Ph.D</option>
+                <option value="PG Student" <%if(oldInput.userType === "PG Student"){%>selected <%}%>>Student (PG)</option>
+                <option value="UG Student" <%if(oldInput.userType === "UG Student"){%>selected <%}%>>Student (UG)</option>
+                <option value="Young Learner" <%if(oldInput.userType === "Young Learner"){%>selected <%}%>>Young Learner Library (YLL)</option>
+                <option value="Admin" <%if(oldInput.userType === "Admin"){%>selected <%}%>>Admin</option>
+            </select>
+        </div>
+        <div class="defaultFormSubBlock">
+            <label class="defaultFormLabel" for="password">Password</label>
+            <input type="password" name="password" placeholder="Password" class="defaultInputBar" id="password" value = "<%=oldInput.password%>"  required>
+        </div>
+        <div class="defaultFormSubBlock">
+            <button class="defaultButton" type="submit">Submit</button>
+        </div>
+    </form>
+</body>
+
+</html>

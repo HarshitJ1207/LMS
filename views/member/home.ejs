@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LNMIIT Library Admin Dashboard</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+        }
+
+        .LNMIITHeader {
+            display: block;
+            height: 100px;
+            width: auto;
+            margin: 10px auto 0 auto;
+        }
+
+        .pageHeading {
+            color: orange;
+        }
+
+        .search-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-bar select,
+        .search-bar input {
+            margin-right: 10px;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .search-bar input,select {
+            color: #333;
+        }
+
+        .search-button {
+            padding: 10px;
+            background-color: #1fa8b6;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .search-button:hover {
+            padding: 12px;
+        }
+
+
+        .navbar {
+            background-color: #1fa8b6;
+            overflow: hidden;
+        }
+
+        .navbar a {
+            float: left;
+            display: block;
+            color: #fff;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        .navbar a:hover {
+            background-color: #155c66;
+        }
+
+        .active {
+            background-color: #155c66;
+        }
+
+    </style>
+</head>
+<body>
+    <%- include('../includes/navigationBar.ejs') %>
+        <img class="LNMIITHeader" src="/icons/lnmiit_header.png" alt="lnmiit_header">
+        <h1>
+            Welcome to LNMIIT Central Library
+        </h1>
+        <h1 style="color: orange;">
+            Online Public Access Catalogue
+        </h1>
+        <div class="search-bar">
+            <form action="/books" method="get" style="margin: 0 auto">
+                <select name="searchType">
+                    <option value="title">Title</option>
+                    <option value="author">Author</option>
+                    <option value="subject">Subject</option>
+                    <option value="ISBN">ISBN</option>
+                </select>
+                <input placeholder="Subject" name="subject">
+                <input placeholder="Search" name="searchValue">
+                <button class="search-button" type="submit">Search</button>
+            </form>
+        </div>
+        
+    </div>
+
+
+</body>
+</html>

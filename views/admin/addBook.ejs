@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add User</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .defaultForm {
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            max-width: 300px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .defaultFormSubBlock {
+            margin-bottom: 15px;
+        }
+
+        .defaultFormLabel {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .defaultInputBar,
+        .defaultDropDown {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .defaultDropDown {
+            width: 100%;
+            max-width: 250px;
+        }
+
+        .defaultButton {
+            padding: 10px;
+            background-color: #1fa8b6;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .error-div{
+            color: red;
+            max-width: 300px;
+            margin: 0 auto;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../includes/adminNavigationBar.ejs') %>
+    <h1>Add Book</h1>
+    <%if(error) {%>
+        <div class = "error-div">
+            <%= error.msg %>
+        </div>
+    <%}%>
+    <form class="defaultForm" action="/admin/addBook" method="post">
+        <div class="defaultFormSubBlock">
+            <label class="defaultFormLabel" for="title">Title</label>
+            <input name="title" placeholder="Title" class="defaultInputBar" id="title" value = "<%= oldInput.title%>" required>
+        </div>
+        <div class="defaultFormSubBlock">
+            <label class="defaultFormLabel" for="author">Author</label>
+            <input name="author" placeholder="Author" class="defaultInputBar" id="author" value = "<%= oldInput.author%>" required>
+        </div>
+        <div class="defaultFormSubBlock">
+            <label class="defaultFormLabel" for="subject">Subject</label>
+            <input name="subject" placeholder="Subject" class="defaultInputBar" id="subject" value = "<%= oldInput.subject%>" required>
+        </div>
+        <div class="defaultFormSubBlock">
+            <label class="defaultFormLabel" for="ISBN">ISBN</label>
+            <input name="ISBN" placeholder="ISBN" class="defaultInputBar" id="ISBN" value = "<%= oldInput.ISBN%>" required>
+        </div>
+        <div class="defaultFormSubBlock">
+            <button class="defaultButton" type="submit">Submit</button>
+        </div>
+    </form>
+</body>
+
+</html>
