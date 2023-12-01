@@ -94,6 +94,19 @@
         .gridItem strong {
             font-weight: bold;
         }
+
+        .paginationButton{
+            padding: 8px;
+            background-color: #1fa8b6;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .paginationButton:hover{
+            padding: 12px;
+        }
     </style>
 </head>
 
@@ -144,7 +157,7 @@
                 let arr = Array.from(set).sort((a, b) => a - b);
             
                 arr.forEach(i => { %>
-                    <button class="btn<% if (page === i) { %> active<% } %>"><a href='/books?searchType=<%=searchType%>&subject=<%=encodeURIComponent(subject)%>&searchValue=<%=encodeURIComponent(searchValue)%>&page=<%=i%>'><%=i%></a></button>
+                    <a class = "paginationButton" href='/books?searchType=<%=searchType%>&subject=<%=encodeURIComponent(subject)%>&searchValue=<%=encodeURIComponent(searchValue)%>&page=<%=i%>'><%=i%></a>
                 <% }) %>
             %>
         </div>
