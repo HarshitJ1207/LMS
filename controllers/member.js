@@ -3,6 +3,10 @@ const Book = require('../models/book');
 const perPage = 30;
 
 exports.getHome = async(req , res) => {
+    if(req.session.user && req.session.user.admin) {
+        res.redirect('/admin');
+        return;
+    }
     const flashMsg = await req.flash('msg');
     res.render('./member/home', {
         flashMsg: flashMsg.length ? flashMsg[0]: undefined,
