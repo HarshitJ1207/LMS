@@ -20,12 +20,12 @@
   "name": "library-management-system",
   "version": "1.0.0",
   "description": "ISDL lab Project",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js",
-    "dev": "nodemon app.js",
-    "start-server": "node app.js"
+    "start": "nodemon index.js",
+    "dev": "nodemon index.js",
+    "start-server": "node index.js"
   },
   "author": "Harshit Jain",
   "license": "ISC"
