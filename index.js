@@ -34,7 +34,7 @@ app.use((req , res , next) => {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs'); 
-app.set('views', 'views');    
+app.set("views", __dirname + "/views");      
 
 
 const adminRoutes = require('./routes/admin.js');
