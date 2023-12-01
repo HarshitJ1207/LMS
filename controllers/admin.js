@@ -288,7 +288,7 @@ exports.postAddBook = async (req , res , next) => {
         doc.lastAllocatedBookID = bookID;
         await book.save();
         await doc.save();
-        res.flash('msg' , 'Book Successfully Added');
+        await req.flash('msg' , 'Book Successfully Added');
         res.redirect('/admin/books');
     } catch (err) {
         console.log(err);
