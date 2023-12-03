@@ -57,18 +57,23 @@ async function calulateFines() {
     }
 };
 
-exports.getAdminDashboard = async (req , res) => {
-    const flashMsg = await req.flash('msg');
-    res.render('./admin/adminDashboard', {
-        flashMsg: flashMsg.length? flashMsg[0]: undefined
-    });
+exports.getAdminDashboard = async (req , res, next) => {
+    try {
+        const flashMsg = await req.flash('msg');
+        res.render('./admin/adminDashboard', {
+            flashMsg: flashMsg.length? flashMsg[0]: undefined
+        });
+    } catch (error) {
+        console.log(error);
+        next();
+    }
 };
 
 exports.getusers = async (req , res, next) => {
     try {
-        const flashMsg = await req.flash('msg');
         if(Object.keys(req.query).length === 0) {
             let userList = await User.find();
+            const flashMsg = await req.flash('msg');
             res.render('./admin/users', {
                 'userList': userList,
                 flashMsg: flashMsg.length? flashMsg[0]: undefined
@@ -81,6 +86,7 @@ exports.getusers = async (req , res, next) => {
         let userList;
         if(userType === 'any') userList = await User.find({ [searchType] : { $regex: searchValue, $options: 'i' } });
         else userList = await User.find({ [searchType] : { $regex: searchValue, $options: 'i' }  , 'details.userType': userType});
+        const flashMsg = await req.flash('msg');
         res.render('./admin/users', {
             userList: userList,
             searchType: req.query.searchType,
@@ -94,7 +100,6 @@ exports.getusers = async (req , res, next) => {
     }
 }; 
 exports.getuser = async (req , res , next) => {
-    const flashMsg = await req.flash('msg');
     try {
         let user = await User.findOne({'details.username': req.params.username});
         if(!user) res.redirect('/admin/users');
@@ -102,6 +107,7 @@ exports.getuser = async (req , res , next) => {
         await user.populate('currentIssues');
         await user.populate('issueHistory.bookID');
         await user.populate('currentIssues.bookID');
+        const flashMsg = await req.flash('msg');
         res.render('./admin/user', {
             user : user,
             flashMsg: flashMsg.length? flashMsg[0]: undefined
@@ -112,108 +118,118 @@ exports.getuser = async (req , res , next) => {
     }
 }; 
 
-exports.getAddUser = async (req , res) => {
-    const flashMsg = await req.flash('msg');
-    res.render('./admin/addUser', {
-        error: undefined,
-        oldInput: {
-            'username': '',
-            'email': '',
-            'contactNumber': '',
-            'userType': '',
-            'password': '',
-        },
-        flashMsg: flashMsg.length? flashMsg[0]: undefined
-    });
-}; 
-exports.postAddUser = async (req, res, next) => {
-    const flashMsg = await req.flash('msg');
-    const errors = validationResult(req).array();
-    if(errors.length){
-        console.log(errors);
-        console.log(errors[0]);
+exports.getAddUser = async (req , res, next) => {
+    try {
+        const flashMsg = await req.flash('msg');
         res.render('./admin/addUser', {
-            error: errors[0],
-            oldInput: req.body,
+            error: undefined,
+            oldInput: {
+                'username': '',
+                'email': '',
+                'contactNumber': '',
+                'userType': '',
+                'password': '',
+            },
             flashMsg: flashMsg.length? flashMsg[0]: undefined
         });
-        return;
-    }
-    let maxBooks = 0;
-    let issueDuration = 0;
-    switch (req.body.userType) {
-        case 'Faculty':
-        case 'Admin':
-            maxBooks = 20;
-            issueDuration = 90;
-            break;
-        case 'Visiting / Guest Faculty':
-            maxBooks = 5;
-            issueDuration = 90;
-            break;
-        case 'Permanent Staff':
-            maxBooks = 5;
-            issueDuration = 30;
-            break;
-            case 'Contractual Staff':
-            maxBooks = 3;
-            issueDuration = 30;
-            break;
-        case 'Research Scholars/PhD':
-            maxBooks = 8;
-            issueDuration = 30;
-            break;
-        case 'PG Student':
-            maxBooks = 6;
-            issueDuration = 30;
-            break;
-        case 'UG Students':
-            maxBooks = 4;
-            issueDuration = 15;
-            break;
-        case 'Young Learner':
-            maxBooks = 3;
-            issueDuration = 15;
-            break;
-        default:
-            maxBooks = 3;
-            issueDuration = 15;
-            break;
-    }
-    User.create({
-        details: {
-            username: req.body.username,
-            email: req.body.email,
-            contactNumber: req.body.contactNumber,
-            userType: req.body.userType,
-            password: req.body.password,
-        },
-        admin: req.body.userType === 'Admin' ? true : false,
-        bookIssuePrivilege: {
-            maxBooks: maxBooks,
-            issueDuration: issueDuration,
-        },
-    })
-    .then((user) => user.save())
-    .then(async() => {
-        await req.flash('msg', 'User Successfully Added');
-        res.redirect('/admin/users')
-    })
-    .catch((err) => {
-        console.log(err);
+    } catch (error) {
+        console.log(error);
         next();
-    });
+    }
+}; 
+exports.postAddUser = async (req, res, next) => {
+    try {
+        const errors = validationResult(req).array();
+        if(errors.length){
+            console.log(errors);
+            console.log(errors[0]);
+            const flashMsg = await req.flash('msg');
+            res.render('./admin/addUser', {
+                error: errors[0],
+                oldInput: req.body,
+                flashMsg: flashMsg.length? flashMsg[0]: undefined
+            });
+            return;
+        }
+        let maxBooks = 0;
+        let issueDuration = 0;
+        switch (req.body.userType) {
+            case 'Faculty':
+            case 'Admin':
+                maxBooks = 20;
+                issueDuration = 90;
+                break;
+            case 'Visiting / Guest Faculty':
+                maxBooks = 5;
+                issueDuration = 90;
+                break;
+            case 'Permanent Staff':
+                maxBooks = 5;
+                issueDuration = 30;
+                break;
+                case 'Contractual Staff':
+                maxBooks = 3;
+                issueDuration = 30;
+                break;
+            case 'Research Scholars/PhD':
+                maxBooks = 8;
+                issueDuration = 30;
+                break;
+            case 'PG Student':
+                maxBooks = 6;
+                issueDuration = 30;
+                break;
+            case 'UG Students':
+                maxBooks = 4;
+                issueDuration = 15;
+                break;
+            case 'Young Learner':
+                maxBooks = 3;
+                issueDuration = 15;
+                break;
+            default:
+                maxBooks = 3;
+                issueDuration = 15;
+                break;
+        }
+        User.create({
+            details: {
+                username: req.body.username,
+                email: req.body.email,
+                contactNumber: req.body.contactNumber,
+                userType: req.body.userType,
+                password: req.body.password,
+            },
+            admin: req.body.userType === 'Admin' ? true : false,
+            bookIssuePrivilege: {
+                maxBooks: maxBooks,
+                issueDuration: issueDuration,
+            },
+        })
+        .then((user) => user.save())
+        .then(async() => {
+            await req.flash('msg', 'User Successfully Added');
+            res.redirect('/admin/users')
+        })
+        .catch((err) => {
+            console.log(err);
+            next();
+        });
+    } catch (error) {
+        console.log(error);
+        next();
+    }
 };
 
 
 exports.getBooks = async (req , res ,next) => {
-    const flashMsg = await req.flash('msg');
-    let page = +req.query.page;
-    if(!page) page = 1;
     try {
+        let page = +req.query.page;
+        if(!page) page = 1;
         if(Object.keys(req.query).length < 2) {
             let bookList = await Book.find().skip((page - 1)*perPage).limit(perPage);
             const totalProducts = await Book.find().countDocuments();
+            const flashMsg = await req.flash('msg');
             res.render('./admin/books', {
                 'bookList': bookList,
                 page: page,
@@ -231,6 +247,7 @@ exports.getBooks = async (req , res ,next) => {
         let bookList = await Book.find({ [searchType] : { $regex: searchValue, $options: 'i' } , 'details.subject': { $regex: subject, $options: 'i' }})
         .skip((page - 1)*perPage).limit(perPage);
         const totalProducts = await Book.find({ [searchType] : { $regex: searchValue, $options: 'i' } , 'details.subject': { $regex: subject, $options: 'i' }}).countDocuments();
+        const flashMsg = await req.flash('msg');
         res.render('./admin/books', {
             'bookList': bookList,
             page: page,
@@ -244,35 +261,41 @@ exports.getBooks = async (req , res ,next) => {
         console.log(error);
         next();
     }
+
 }; 
 
-exports.getAddBook = async(req , res) => {
-    const flashMsg = await req.flash('msg');
-    res.render('./admin/addBook', {
-        error: undefined,
-        oldInput: {
-            'title': '',
-            'author': '',
-            'subject': '',
-            'ISBN': '',
-        },
-        flashMsg: flashMsg.length? flashMsg[0]: undefined
-    });
+exports.getAddBook = async(req , res, next) => {
+    try {
+        const flashMsg = await req.flash('msg');
+        res.render('./admin/addBook', {
+            error: undefined,
+            oldInput: {
+                'title': '',
+                'author': '',
+                'subject': '',
+                'ISBN': '',
+            },
+            flashMsg: flashMsg.length? flashMsg[0]: undefined
+        });
+    } catch (error) {
+        console.log(error);
+        next();
+    }
 };
 
 
 exports.postAddBook = async (req , res , next) => {
-    const flashMsg = await req.flash('msg');
-    const errors = validationResult(req).array();
-    if(errors.length){
-        res.render('./admin/addBook', {
-            error: errors[0],
-            oldInput: req.body,
-            flashMsg: flashMsg.length? flashMsg[0]: undefined
-        });
-        return;
-    }
     try {
+        const errors = validationResult(req).array();
+        if(errors.length){
+            const flashMsg = await req.flash('msg');
+            res.render('./admin/addBook', {
+                error: errors[0],
+                oldInput: req.body,
+                flashMsg: flashMsg.length? flashMsg[0]: undefined
+            });
+            return;
+        }
         const doc = await dbs.findOne();
         const bookID = newBookID(doc.lastAllocatedBookID);
         const book = await Book.create({
@@ -290,30 +313,35 @@ exports.postAddBook = async (req , res , next) => {
         await doc.save();
         await req.flash('msg' , 'Book Successfully Added');
         res.redirect('/admin/books');
-    } catch (err) {
-        console.log(err);
+    } catch (error) {
+        console.log(error);
         next();
     }
 };
 
-exports.getBookIssue = async (req , res) => {
-    const flashMsg = await req.flash('msg');
-    res.render('./admin/bookIssue' , {
-        error: undefined,
-        oldInput: {
-            'bookID': '',
-            'username': '',
-        },
-        flashMsg: flashMsg.length? flashMsg[0]: undefined
-    });
+exports.getBookIssue = async (req , res, next) => {
+    try {
+        const flashMsg = await req.flash('msg');
+        res.render('./admin/bookIssue' , {
+            error: undefined,
+            oldInput: {
+                'bookID': '',
+                'username': '',
+            },
+            flashMsg: flashMsg.length? flashMsg[0]: undefined
+        });
+    } catch (error) {
+        console.log(error);
+        next();
+    }
 }; 
 
 exports.postBookIssue = async (req, res, next) => {
     try {
-        const flashMsg = await req.flash('msg');
         await calulateFines();
         const errors = validationResult(req).array();
         if(errors.length){
+            const flashMsg = await req.flash('msg');
             res.render('./admin/bookIssue', {
                 error: errors[0],
                 oldInput: req.body,
@@ -333,6 +361,7 @@ exports.postBookIssue = async (req, res, next) => {
             const error = {
                 msg:user.overdueFine ? "User has Overdue Fine": "User has already issued Max number of books"
             };
+            const flashMsg = await req.flash('msg');
             res.render('./admin/bookIssue', {
                 error: error,
                 oldInput: req.body,
@@ -366,18 +395,23 @@ exports.postBookIssue = async (req, res, next) => {
 };
 
 
-exports.getBookReturn = async (req , res) => {
-    const flashMsg = await req.flash('msg');
-    res.render('./admin/bookReturn', {
-        error: undefined,
-        oldInput: {
-            'bookID': '',
-        },
-        flashMsg: flashMsg.length? flashMsg[0]: undefined
-    });
+exports.getBookReturn = async (req , res, next) => {
+    try {
+        const flashMsg = await req.flash('msg');
+        res.render('./admin/bookReturn', {
+            error: undefined,
+            oldInput: {
+                'bookID': '',
+            },
+            flashMsg: flashMsg.length? flashMsg[0]: undefined
+        });
+    } catch (error) {
+        console.log(error);
+        next();
+    }
 }; 
 
-exports.getIssueData = async (req , res , next) => {
+exports.getIssueData = async (req , res) => {
     try{
         const book = await Book.findOne({
             'bookID': req.query.bookID
@@ -404,10 +438,10 @@ exports.getIssueData = async (req , res , next) => {
 
 exports.postBookReturn = async (req, res, next) => {
     try {
-        const flashMsg = await req.flash('msg');
         await calulateFines();
         const errors = validationResult(req).array();
         if(errors.length){
+            const flashMsg = await req.flash('msg');
             res.render('./admin/bookReturn', {
                 error: errors[0],
                 oldInput: req.body,
@@ -440,7 +474,6 @@ exports.postBookReturn = async (req, res, next) => {
 
 exports.getBook = async (req , res , next) => {
     try {
-        const flashMsg = await req.flash('msg');
         let book = await Book.findOne({bookID: req.params.bookID});
         if(!book){
             res.redirect('/admin/books');
@@ -449,10 +482,13 @@ exports.getBook = async (req , res , next) => {
         await book.populate('issueHistory');
         await book.populate('issueHistory.userID');
         if(!book) res.redirect('/admin/books');
-        else res.render('./admin/book', {
-            book : book,
-            flashMsg : flashMsg.length? flashMsg[0]: undefined
-        }); 
+        else {
+            const flashMsg = await req.flash('msg');
+            res.render('./admin/book', {
+                book : book,
+                flashMsg : flashMsg.length? flashMsg[0]: undefined
+            }); 
+        }
     } catch (error) {
         console.log(error);
         next();
@@ -461,6 +497,11 @@ exports.getBook = async (req , res , next) => {
 
 
 exports.getCalulateFines = async (req, res, next) => {
-    await calulateFines();
-    res.redirect('/admin');
+    try {
+        await calulateFines();
+        res.redirect('/admin');
+    } catch (error) {
+        console.log(error);
+        next();
+    }
 };

@@ -11,8 +11,11 @@ router.get("/login" , memberController.getLogin);
 router.get("/logout" , memberController.getLogout);
 router.get("/me" , memberController.getMe);
 
+router.get("/studio", memberController.getStudio);
+
 
 router.post("/login", memberController.postLogin); 
+router.post("/studio", memberController.postStudio); 
 
 
 
