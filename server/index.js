@@ -77,7 +77,7 @@ async function connectDB(){
             });
             await root.save();
         }
-        app.listen(process.env.PORT || 3000);
+        app.listen(process.env.PORT || 8000);
         console.log("connection success");
     }
     catch(err){
