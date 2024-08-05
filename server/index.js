@@ -2,6 +2,7 @@ dotenv = require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser'); 
 const mongoose = require('mongoose');
+const cors = require('cors');
 const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
@@ -12,6 +13,8 @@ const flash = require('connect-flash');
 
 const MONGODB_URI = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.9ronrfd.mongodb.net/${process.env.MONGODB_DBNAME}?retryWrites=true&w=majority`;
 const app = express();
+
+app.use(cors());
 
 app.use(session({
    secret: 'your-secret-key',
@@ -39,8 +42,10 @@ app.set("views", __dirname + "/views");
 
 const adminRoutes = require('./routes/admin.js');
 const memberRoutes = require('./routes/member.js');
+const memberApiRoutes = require('./routes/member-api.js');
 
  
+app.use('/api',memberApiRoutes);
 app.use('/admin', adminRoutes);
 app.use(memberRoutes);
 
@@ -49,7 +54,7 @@ app.use((req , res) => {
 })
 
 connectDB();
-
+ 
 
 async function connectDB(){
     try{

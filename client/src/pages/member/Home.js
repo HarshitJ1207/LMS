@@ -4,8 +4,6 @@ function Home() {
     return (
         <React.Fragment>
             <NavigationBar />
-
-
         </React.Fragment>
     );
 }
