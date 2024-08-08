@@ -57,7 +57,7 @@ const UserSearchBox = ({ query, setQuery , setLoading }) => {
                         <option value="PG Student">Student (PG)</option>
                         <option value="UG Student">Student (UG)</option>
                         <option value="Young Learner">Young Learner Library (YLL)</option>
-                        <option value="admin">Admin</option>
+                        <option value="Admin">Admin</option>
                     </select>
                     <input
                         name="searchValue"

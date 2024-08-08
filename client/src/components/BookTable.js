@@ -34,7 +34,7 @@ function BookTable({ query, setQuery, loading, setLoading }) {
     }, [query ,setLoading]);
 
     const idClickHandler = (event) => {
-        if(isLoggedIn === 'admin') {
+        if(isLoggedIn === 'Admin') {
             const bookID = event.target.innerHTML;
             navigator(`/admin/book/${bookID}`);
         }

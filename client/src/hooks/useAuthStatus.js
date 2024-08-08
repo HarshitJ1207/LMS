@@ -8,7 +8,7 @@ const useAuthStatus = () => {
     useEffect(() => {
         let isMounted = true;
 
-        if (isLoggedIn === 'admin') {
+        if (isLoggedIn === 'Admin') {
             setLoading(false);
             return;
         }
