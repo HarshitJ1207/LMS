@@ -12,7 +12,7 @@ const AdminBookDetail = () => {
     useEffect(() => {
         const fetchBookDetails = async () => {
             try {
-                const url = `http://localhost:8000/api/admin/books/${id}`;
+                const url = `${process.env.REACT_APP_API_BASE_URL}/admin/books/${id}`;
                 console.log(url);
                 const response = await fetch(url, {
                     credentials: 'include'

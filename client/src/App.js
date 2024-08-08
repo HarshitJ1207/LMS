@@ -31,7 +31,7 @@ function App() {
     useEffect(() => {
         const checkLoginStatus = async () => {
             try {
-                const res = await fetch('http://localhost:8000/api/loginStatus', {
+                const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/loginStatus`, {
                     credentials: 'include',
                 });
                 if (!res.ok) {

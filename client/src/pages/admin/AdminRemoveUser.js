@@ -26,7 +26,7 @@ const AdminRemoveUser = () => {
 		}
 		try {
 			const response = await fetch(
-				`http://localhost:8000/api/admin/removeUser/${username}`,
+				`${process.env.REACT_APP_API_BASE_URL}/admin/removeUser/${username}`,
 				{
 					method: "DELETE",
                     credentials: 'include',

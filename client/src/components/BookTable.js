@@ -15,7 +15,7 @@ function BookTable({ query, setQuery, loading, setLoading }) {
         setBookList([]);
         const fetchBooks = async () => {
             try {
-                const response = await fetch(`http://localhost:8000/api/books?page=${query.page}&searchType=${query.searchType}&searchValue=${query.searchValue}&subject=${query.subject}`);
+                const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/books?page=${query.page}&searchType=${query.searchType}&searchValue=${query.searchValue}&subject=${query.subject}`);
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => {
                         throw new Error('Network response was not ok');

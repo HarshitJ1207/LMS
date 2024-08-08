@@ -31,7 +31,7 @@ const AdminRemoveBook = () => {
 		}
 		try {
 			const response = await fetch(
-				`http://localhost:8000/api/admin/removeBook/${bookId}`,
+				`${process.env.REACT_APP_API_BASE_URL}/admin/removeBook/${bookId}`,
 				{
 					method: "DELETE",
 					headers: {

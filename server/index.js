@@ -3,7 +3,6 @@ const express = require('express');
 const bodyParser = require('body-parser'); 
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const dbs = require('./models/databaseStats.js');
@@ -14,38 +13,46 @@ const MONGODB_URI = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env
 const app = express();
 
 const corsOptions = {
-    origin: 'http://localhost:3000',
-    credentials: true
+    origin: 'https://lms-react-frontend-nine.vercel.app',
+    credentials: true, 
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
+
+app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 
 app.use(session({
-   secret: 'your-secret-key',
-   resave: false,
-   saveUninitialized: false,
-   store: MongoStore.create({
+    name:'LMS-sid',
+    secret: 'your-secret-key', 
+    resave: false,
+    proxy: true,
+    saveUninitialized: false,
+    store: MongoStore.create({
         mongoUrl: MONGODB_URI,
         stringify: false,
-    })
-})); 
+    }),
+    cookie: {   
+        secure: true,
+        sameSite: 'none',
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+    }
+}));
 
 
-app.use((req , res , next) => {
-    if(req.session.user) res.locals.loggedIn = true;
-    else res.locals.loggedIn = false;
-    next();
-})
+app.get('/', (req, res) => {
+    res.send('Hello World');
+});
 
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());  
-
 
 const memberApiRoutes = require('./routes/member-api.js');
 const adminApiRoutes = require('./routes/admin-api.js');
 
  
-app.use('/api/admin',adminApiRoutes);
+app.use('/api/admin',adminApiRoutes); 
 app.use('/api',memberApiRoutes);
 
 connectDB();

@@ -72,7 +72,7 @@ const AdminAddUser = () => {
 		}
 		try {
 			const response = await fetch(
-				"http://localhost:8000/api/admin/addUser",
+				`${process.env.REACT_APP_API_BASE_URL}/admin/addUser`,
 				{
 					method: "POST",
 					headers: {

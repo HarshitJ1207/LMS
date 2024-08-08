@@ -15,7 +15,7 @@ const useAuthStatus = () => {
 
         const checkLoginStatus = async () => {
             try {
-                const response = await fetch('http://localhost:8000/api/loginStatus', {
+                const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/loginStatus`, {
                     credentials: 'include',
                 });
                 if (!response.ok) {
