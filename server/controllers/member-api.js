@@ -7,12 +7,13 @@ const perPage = 30;
 
 exports.getLoginStatus = async (req , res) => {
     try{
-        if(req.session.user) return res.json({loggedIn: true});
-        else return res.json({loggedIn: false});
+        console.log('GET /api/member/loginStatus', req.session.user);
+        if(req.session.user) return res.json({userType: req.session.user.details.userType});
+        else return res.json({userType: false});
     }
     catch(error){
         console.log(error);
-        return res.json({loggedIn: false});
+        return res.json({userType: false});
     }
 }
 
@@ -20,50 +21,33 @@ exports.getLoginStatus = async (req , res) => {
 
 exports.postLogin = async (req, res) => {
     try {
-        let error = await req.flash('errors');
-        if (error.length) {
-            const flashMsg = await req.flash('msg');
-            return res.status(400).json({
-                error: error[0],
-                oldInput: req.body,
-                flashMsg: flashMsg.length ? flashMsg[0] : undefined
-            });
-        }
-
-        console.log(req.body);
-
-        let user = await User.findOne({
-            'details.username': req.body.username,
-            'details.password': req.body.password
+        const { username, password } = req.body;
+        console.log('Login attempt:', req.body);
+        const user = await User.findOne({
+            'details.username': username,
+            'details.password': password
         });
 
         if (!user) {
-            const flashMsg = await req.flash('msg');
-            await req.flash('errors', 'Email and Password do not match');
-            error = await req.flash('errors');
             return res.status(401).json({
-                error: error[0],
-                oldInput: req.body,
-                flashMsg: flashMsg.length ? flashMsg[0] : undefined
+                error: 'Email and Password do not match',
             });
-        } else {
-            console.log('User found');
-            req.session.user = user;
-            await req.session.save(err => {
-                if (err) {
-                    console.log(err);
-                    return res.status(500).json({ message: 'Session save error' });
-                }
-            });
-            await req.flash('msg', "You have successfully logged in");
-            return res.status(200).json({ message: 'Login successful' });
         }
+
+        req.session.user = user;
+        req.session.save(err => {
+            if (err) {
+                console.error('Session save error:', err);
+                return res.status(500).json({ error: 'Session save error' });
+            }
+
+            return res.status(200).json({ userType: user.details.userType });
+        });
     } catch (error) {
-        console.log(error);
-        return res.status(500).json({ message: 'Internal server error' });
+        console.error('Internal server error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 };
-
 
 exports.getBooks = async (req, res, next) => {
     try {
@@ -103,6 +87,7 @@ exports.getBooks = async (req, res, next) => {
 };
 
 exports.getMe = async (req, res) => {
+    console.log('GET /api/member/me', req.session.user);
     try {
         if (!req.session.user) {
             return res.status(401).json({ error: 'Unauthorized' });
@@ -117,7 +102,6 @@ exports.getMe = async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-
         res.status(200).json({ user });
     } catch (error) {
         console.error(error);
@@ -205,6 +189,17 @@ exports.postStudio = async (req , res, next) => {
         next();
     }
 }
+
+exports.postLogout = async (req, res) => {
+    console.log('POST /api/member/logout', req.session.user);
+    req.session.destroy(err => {
+        if (err) {
+            return res.status(500).json({ message: 'Session destroy error' });
+        }
+        res.clearCookie('connect.sid', { path: '/' });
+        res.status(200).json({ message: 'Logout successful' });
+    });  
+};
 
 
 

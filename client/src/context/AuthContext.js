@@ -6,9 +6,9 @@ export const AuthProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     const login = (userStatus = true) => setIsLoggedIn(userStatus);
-    const logout = () => {
+    const logout = async () => {
         setIsLoggedIn(false);
-        delete sessionStorage.sid;
+        await fetch('http://localhost:8000/api/logout', { method: 'POST', credentials: 'include' });
     };
 
     return (

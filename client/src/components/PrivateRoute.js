@@ -1,33 +1,16 @@
-import React, { useContext, useState , useEffect } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import useAuthStatus from '../hooks/useAuthStatus';
+import LoadingComponent from './extras/LoadingComponent';
 
 const PrivateRoute = ({ element: Component, ...rest }) => {
-    const { login, isLoggedIn } = useContext(AuthContext);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        if(isLoggedIn) {
-            setLoading(false);
-            return;
-        }
-        const checkLoginStatus = async () => {
-            const res = await fetch('http://localhost:8000/api/loginStatus', {
-                credentials: 'include',
-            });
-            const data = await res.json();
-            setLoading(false);
-            if (data) login(data.loggedIn);
-        };
-
-        checkLoginStatus();
-    }, [login, isLoggedIn]);
+    const { loading, isLoggedIn } = useAuthStatus();
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <LoadingComponent />;
     }
 
-    return isLoggedIn ? (
+    return isLoggedIn === 'Admin' ? (
         <Component {...rest} />
     ) : (
         <Navigate to="/login" />

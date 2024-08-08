@@ -30,14 +30,26 @@ function App() {
 
     useEffect(() => {
         const checkLoginStatus = async () => {
-            const res = await fetch('http://localhost:8000/api/loginStatus', {
-                credentials: 'include',
-            });
-            const data = await res.json();
-            if (data) login(data.loggedIn);
-            setLoading(false);
+            try {
+                const res = await fetch('http://localhost:8000/api/loginStatus', {
+                    credentials: 'include',
+                });
+                if (!res.ok) {
+                    login(false);
+                    setLoading(false);
+                    return;
+                }
+                const data = await res.json();
+                if (data) login(data.userType);
+                console.log(data);
+            }
+            catch (error) {
+                login(false);
+            }
+            finally {
+                setLoading(false);
+            }
         };
-
         checkLoginStatus();
     }, [login]);
 

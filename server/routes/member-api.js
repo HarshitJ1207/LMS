@@ -9,5 +9,6 @@ router.get("/me" , memberController.getMe);
 router.get("/studio", memberController.getStudio);
 router.post("/login", memberController.postLogin); 
 router.post("/studio", memberController.postStudio); 
+router.post("/logout", memberController.postLogout);
 
 module.exports = router;
