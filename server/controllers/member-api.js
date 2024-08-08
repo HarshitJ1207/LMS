@@ -110,88 +110,7 @@ exports.getMe = async (req, res) => {
 };
 
 
-exports.getStudio = async (req , res, next) => { 
-    try {
-        if(!req.session.user) return res.redirect('/login');
-        const user = await User.findOne({'details.username' : req.session.user.details.username});
-        const bookingHistory = await Studio.find({
-            userID: user._id
-        });
-        const flashMsg = await req.flash('msg');
-        res.render('./member/studio', {
-            user : user,
-            flashMsg: flashMsg.length? flashMsg[0]: undefined,
-            error: null,
-            oldInput: {
-                bookingDate: null, 
-                bookingTime: null,
-                people: null,
-                purpose: null,
-                equipment: [],
-                topic: null
-            },
-            bookingHistory: bookingHistory
-        });
-    } catch (error) {
-        console.log(error);
-        next();
-    }
-}
-exports.postStudio = async (req , res, next) => { 
-    try {
-        if(!req.session.user) return res.redirect('/login');
-        console.log(req.body);
-        const user = await User.findOne({'details.username' : req.session.user.details.username});
-        const existingBooking = await Studio.findOne({
-            bookingDate: req.body.bookingDate,
-            bookingTime: req.body.bookingTime,
-        })
-        if(existingBooking){
-            const flashMsg = await req.flash('msg');
-            const bookingHistory = await Studio.find({
-                userID: user._id
-            })
-            res.render('./member/studio', {
-                user : user,
-                flashMsg: flashMsg.length? flashMsg[0]: undefined,
-                error: 'Slot is unavailable',
-                oldInput: {
-                    bookingDate: req.body.bookingDate,
-                    bookingTime: req.body.bookingTime,
-                    people: req.body.people,
-                    purpose: req.body.purpose,
-                    equipment: req.body.equipment,
-                    topic: req.body.topic
-                },
-                bookingHistory: bookingHistory
-            });
-            return;
-        }
-        else{
-            await Studio.create({
-                userID: user._id,
-                bookingDate: req.body.bookingDate,
-                bookingTime: req.body.bookingTime,
-                people: req.body.people,
-                purpose: req.body.purpose,
-                equipment: req.body.equipment,
-                topic: req.body.topic
-            })
-            await req.flash('msg', 'Slot successfully booked');
-            const flashMsg = await req.flash('msg');
-            res.render('./member/home', {
-                flashMsg: flashMsg.length ? flashMsg[0]: undefined,
-            });
-            return
-        }
-    } catch (error) {
-        console.log(error);
-        next();
-    }
-}
-
 exports.postLogout = async (req, res) => {
-    console.log('POST /api/member/logout', req.session.user);
     req.session.destroy(err => {
         if (err) {
             return res.status(500).json({ message: 'Session destroy error' });
@@ -201,5 +120,86 @@ exports.postLogout = async (req, res) => {
     });  
 };
 
+
+
+// exports.getStudio = async (req , res, next) => { 
+//     try {
+//         if(!req.session.user) return res.redirect('/login');
+//         const user = await User.findOne({'details.username' : req.session.user.details.username});
+//         const bookingHistory = await Studio.find({
+//             userID: user._id
+//         });
+//         const flashMsg = await req.flash('msg');
+//         res.render('./member/studio', {
+//             user : user,
+//             flashMsg: flashMsg.length? flashMsg[0]: undefined,
+//             error: null,
+//             oldInput: {
+//                 bookingDate: null, 
+//                 bookingTime: null,
+//                 people: null,
+//                 purpose: null,
+//                 equipment: [],
+//                 topic: null
+//             },
+//             bookingHistory: bookingHistory
+//         });
+//     } catch (error) {
+//         console.log(error);
+//         next();
+//     }
+// }
+// exports.postStudio = async (req , res, next) => { 
+//     try {
+//         if(!req.session.user) return res.redirect('/login');
+//         console.log(req.body);
+//         const user = await User.findOne({'details.username' : req.session.user.details.username});
+//         const existingBooking = await Studio.findOne({
+//             bookingDate: req.body.bookingDate,
+//             bookingTime: req.body.bookingTime,
+//         })
+//         if(existingBooking){
+//             const flashMsg = await req.flash('msg');
+//             const bookingHistory = await Studio.find({
+//                 userID: user._id
+//             })
+//             res.render('./member/studio', {
+//                 user : user,
+//                 flashMsg: flashMsg.length? flashMsg[0]: undefined,
+//                 error: 'Slot is unavailable',
+//                 oldInput: {
+//                     bookingDate: req.body.bookingDate,
+//                     bookingTime: req.body.bookingTime,
+//                     people: req.body.people,
+//                     purpose: req.body.purpose,
+//                     equipment: req.body.equipment,
+//                     topic: req.body.topic
+//                 },
+//                 bookingHistory: bookingHistory
+//             });
+//             return;
+//         }
+//         else{
+//             await Studio.create({
+//                 userID: user._id,
+//                 bookingDate: req.body.bookingDate,
+//                 bookingTime: req.body.bookingTime,
+//                 people: req.body.people,
+//                 purpose: req.body.purpose,
+//                 equipment: req.body.equipment,
+//                 topic: req.body.topic
+//             })
+//             await req.flash('msg', 'Slot successfully booked');
+//             const flashMsg = await req.flash('msg');
+//             res.render('./member/home', {
+//                 flashMsg: flashMsg.length ? flashMsg[0]: undefined,
+//             });
+//             return
+//         }
+//     } catch (error) {
+//         console.log(error);
+//         next();
+//     }
+// }
 
 

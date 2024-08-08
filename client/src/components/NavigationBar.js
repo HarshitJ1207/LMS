@@ -9,13 +9,21 @@ function NavigationBar() {
             <div className="flex space-x-4">
                 <Link to="/" className="text-white hover:text-blue-500 hover:underline">Home</Link>
                 <Link to="/Books" className="text-white hover:text-blue-500 hover:underline">Books</Link>
-                <Link to="/Studio" className="text-white hover:text-blue-500 hover:underline">Studio</Link>
-                <Link to="/About" className="text-white hover:text-blue-500 hover:underline">About</Link>
+                {isLoggedIn && <Link to="/Me" className="text-white hover:text-blue-500 hover:underline">Me</Link>}
             </div>
-            <div className="ml-auto flex space-x-4">
-                <Link to="/Signup" className="text-white hover:text-blue-500 hover:underline">Signup</Link>
-                <Link to="/Login" className="text-white hover:text-blue-500 hover:underline">Login</Link>
-            </div>
+            {
+                isLoggedIn ? (
+                    <div className="ml-auto flex space-x-4">
+                        <Link to="/Signout" className="text-white hover:text-blue-500 hover:underline">Signout</Link>
+                    </div>
+
+                ) : (
+                    <div className="ml-auto flex space-x-4">
+                        <Link to="/Signup" className="text-white hover:text-blue-500 hover:underline">Signup</Link>
+                        <Link to="/Login" className="text-white hover:text-blue-500 hover:underline">Login</Link>
+                    </div>
+                )
+            }
         </nav>
     );
     return (

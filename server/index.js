@@ -8,7 +8,6 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const dbs = require('./models/databaseStats.js');
 const User = require('./models/user.js');
-const flash = require('connect-flash');
 
 
 const MONGODB_URI = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.9ronrfd.mongodb.net/${process.env.MONGODB_DBNAME}?retryWrites=true&w=majority`;
@@ -31,7 +30,6 @@ app.use(session({
     })
 })); 
 
-app.use(flash());
 
 app.use((req , res , next) => {
     if(req.session.user) res.locals.loggedIn = true;
@@ -40,30 +38,18 @@ app.use((req , res , next) => {
 })
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.set('view engine', 'ejs'); 
-app.set("views", __dirname + "/views");      
+app.use(bodyParser.json());  
 
 
-const adminRoutes = require('./routes/admin.js');
-const memberRoutes = require('./routes/member.js');
 const memberApiRoutes = require('./routes/member-api.js');
 const adminApiRoutes = require('./routes/admin-api.js');
 
  
 app.use('/api/admin',adminApiRoutes);
 app.use('/api',memberApiRoutes);
-app.use('/admin', adminRoutes);
-app.use(memberRoutes);
-
-app.use((req , res) => {
-    res.render('./404');
-})
 
 connectDB();
  
-
 async function connectDB(){
     try{
         await mongoose.connect(MONGODB_URI);
@@ -80,7 +66,7 @@ async function connectDB(){
                     username: 'root',
                     email: 'jain1207harshit@gmail.com',
                     contactNumber: '9406817091',
-                    userType: 'admin',
+                    userType: 'Admin',
                     password: 'root'
                 },
                 bookIssuePrivilege:{

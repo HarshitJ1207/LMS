@@ -3,7 +3,6 @@ const router = express.Router();
 const adminController = require('../controllers/admin-api');
 const auth = require('../middleware/auth');
 const User = require('../models/user')
-const Book = require('../models/book')
 const { check } = require('express-validator');
 
 router.get("/users" , auth.authAdmin, adminController.getusers);
