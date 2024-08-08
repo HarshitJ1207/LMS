@@ -14,7 +14,12 @@ const flash = require('connect-flash');
 const MONGODB_URI = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.9ronrfd.mongodb.net/${process.env.MONGODB_DBNAME}?retryWrites=true&w=majority`;
 const app = express();
 
-app.use(cors());
+const corsOptions = {
+    origin: 'http://localhost:3000',
+    credentials: true
+};
+
+app.use(cors(corsOptions));
 
 app.use(session({
    secret: 'your-secret-key',
@@ -36,6 +41,7 @@ app.use((req , res , next) => {
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.set('view engine', 'ejs'); 
 app.set("views", __dirname + "/views");      
 
@@ -43,8 +49,10 @@ app.set("views", __dirname + "/views");
 const adminRoutes = require('./routes/admin.js');
 const memberRoutes = require('./routes/member.js');
 const memberApiRoutes = require('./routes/member-api.js');
+const adminApiRoutes = require('./routes/admin-api.js');
 
  
+app.use('/api/admin',adminApiRoutes);
 app.use('/api',memberApiRoutes);
 app.use('/admin', adminRoutes);
 app.use(memberRoutes);

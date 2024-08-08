@@ -1,46 +1,86 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState } from 'react';
+import { useEffect } from 'react';
 
 function BookSearchBox({ query, setQuery }) {
-    const { register, handleSubmit } = useForm();
+    console.log('render query' , query);
+    const [formValues, setFormValues] = useState({
+        searchType: query.searchType,
+        subject: query.subject,
+        searchValue: query.searchValue 
+    });
 
-    const onSubmit = (data) => {
-        setQuery({...data , page: 1});
+    useEffect(() => {
+        setFormValues({
+            searchType: query.searchType || 'title',
+            subject: query.subject || '',
+            searchValue: query.searchValue || '' 
+        });
+    }, [query]);
+    console.log('render form' , formValues);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormValues({
+            ...formValues,
+            [name]: value
+        });
+    };
+
+    const onSubmit = (e) => {
+        e.preventDefault();
+        console.log('submit', formValues);
+        setQuery({ ...formValues, page: 1 });
+    };
+
+    const handleReset = () => {
+        setFormValues({
+            searchType: 'title',
+            subject: '',
+            searchValue: ''
+        });
+        setQuery({ page: 1, searchType: 'title', searchValue: '', subject: '' });
     };
 
     return (
         <div className="shadow-md m-3 border h-auto p-4 rounded-lg bg-white">
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-row items-center justify-center w-full flex-wrap">
-                {console.log(query.searchType)}
-                <select {...register("searchType")} value={query.searchType ? String(query.searchType) : 'title'} className="mx-2 border-2 p-2 shadow-sm rounded-md">
-                    <option value="title" name="title">Title</option>
-                    <option value="author" name="author">Author</option>
-                    <option value="ISBN" name="ISBN">ISBN</option>
+            <form onSubmit={onSubmit} className="flex flex-row items-center justify-center w-full flex-wrap">
+                <select
+                    name="searchType"
+                    value={formValues.searchType}
+                    onChange={handleChange}
+                    className="mx-2 border-2 p-2 shadow-sm rounded-md"
+                >
+                    <option value="title">Title</option>
+                    <option value="author">Author</option>
+                    <option value="ISBN">ISBN</option>
                 </select>
-            <input
-                placeholder='Subject'
-                {...register("subject")}
-                className="mx-2 border-2 p-2 shadow-sm rounded-md"
-                defaultValue={query.subject || ''}
-            />
-            <input
-                placeholder='Search Value'
-                {...register("searchValue")}
-                className="mx-2 border-2 p-2 shadow-sm rounded-md"
-                defaultValue={query.searchValue || ''}
-            />
-            <button
-                className="search-button mx-2 border-2 p-2 shadow-sm rounded-md bg-blue-500 text-white hover:bg-blue-600"
-                type="submit"
-            >
-                Search
-            </button>
-            <button
-                className="search-button mx-2 border-2 p-2 shadow-sm rounded-md bg-blue-500 text-white hover:bg-blue-600"
-                onClick={() => setQuery({page: 1, searchType: 'title', searchValue: '', subject: ''})}
-            >
-                Reset
-            </button>
+                <input
+                    name="subject"
+                    placeholder="Subject"
+                    value={formValues.subject}
+                    onChange={handleChange}
+                    className="mx-2 border-2 p-2 shadow-sm rounded-md"
+                />
+                <input
+                    name="searchValue"
+                    placeholder="Search Value"
+                    value={formValues.searchValue}
+                    onChange={handleChange}
+                    className="mx-2 border-2 p-2 shadow-sm rounded-md"
+                />
+                <button
+                    className="search-button mx-2 border-2 p-2 shadow-sm rounded-md bg-blue-500 text-white hover:bg-blue-600"
+                    type="submit"
+                >
+                    Search
+                </button>
+                <button
+                    className="search-button mx-2 border-2 p-2 shadow-sm rounded-md bg-blue-500 text-white hover:bg-blue-600"
+                    type="button"
+                    onClick={handleReset}
+                >
+                    Reset
+                </button>
             </form>
         </div>
     );

@@ -4,7 +4,6 @@ const User = require('../models/user');
 const Book = require('../models/book');
 const BookIssue = require('../models/bookIssue');
 const dbs = require('../models/databaseStats');
-const perPage = 30;
 
 
 function newBookID(oldBookID){
@@ -69,54 +68,51 @@ exports.getAdminDashboard = async (req , res, next) => {
     }
 };
 
-exports.getusers = async (req , res, next) => {
+exports.getusers = async (req, res) => {
     try {
-        if(Object.keys(req.query).length === 0) {
-            let userList = await User.find();
-            const flashMsg = await req.flash('msg');
-            res.render('./admin/users', {
-                'userList': userList,
-                flashMsg: flashMsg.length? flashMsg[0]: undefined
-            });
-            return;
+        console.log('Fetching users');
+        const { searchType, searchValue, userType } = req.query;
+        console.log(req.query);
+        const query = {};
+
+        if (searchValue!= '') {
+            query[`details.${searchType}`] = { $regex: searchValue, $options: 'i' };
         }
-        let searchType = `details.${req.query.searchType}`;
-        let searchValue = req.query.searchValue;
-        let userType = req.query.userType;
-        let userList;
-        if(userType === 'any') userList = await User.find({ [searchType] : { $regex: searchValue, $options: 'i' } });
-        else userList = await User.find({ [searchType] : { $regex: searchValue, $options: 'i' }  , 'details.userType': userType});
-        const flashMsg = await req.flash('msg');
-        res.render('./admin/users', {
-            userList: userList,
-            searchType: req.query.searchType,
-            searchValue: searchValue,
-            userType: userType,
-            flashMsg: flashMsg.length? flashMsg[0]: undefined
+        if (userType && userType !== 'any') {
+            query['details.userType'] = userType;
+        }
+        const userList = await User.find(query);
+        console.log(userList);
+        res.json({
+            userList,
         });
     } catch (error) {
-        console.log(error);
-        next();
+        console.error('Error fetching users:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
-}; 
-exports.getuser = async (req , res , next) => {
+};
+
+
+exports.getuser = async (req, res) => {
     try {
         let user = await User.findOne({'details.username': req.params.username});
-        if(!user) res.redirect('/admin/users');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
         await user.populate('issueHistory');
         await user.populate('currentIssues');
         await user.populate('issueHistory.bookID');
         await user.populate('currentIssues.bookID');
         const flashMsg = await req.flash('msg');
-        res.render('./admin/user', {
-            user : user,
-            flashMsg: flashMsg.length? flashMsg[0]: undefined
-        }); 
+        res.json({
+            user: user,
+            flashMsg: flashMsg.length ? flashMsg[0] : undefined
+        });
     } catch (error) {
         console.log(error);
-        next();
+        next(error);
     }
-}; 
+};
 
 exports.getAddUser = async (req , res, next) => {
     try {
@@ -222,48 +218,6 @@ exports.postAddUser = async (req, res, next) => {
 };
 
 
-exports.getBooks = async (req , res ,next) => {
-    try {
-        let page = +req.query.page;
-        if(!page) page = 1;
-        if(Object.keys(req.query).length < 2) {
-            let bookList = await Book.find().skip((page - 1)*perPage).limit(perPage);
-            const totalProducts = await Book.find().countDocuments();
-            const flashMsg = await req.flash('msg');
-            res.render('./admin/books', {
-                'bookList': bookList,
-                page: page,
-                lastPage: Math.ceil(totalProducts/perPage),
-                searchType: 'title',
-                searchValue: '',
-                subject: '',
-                flashMsg: flashMsg.length? flashMsg[0]: undefined
-            });
-            return;
-        }
-        let searchType = `details.${req.query.searchType}`;
-        let searchValue = req.query.searchValue;
-        let subject = req.query.subject;
-        let bookList = await Book.find({ [searchType] : { $regex: searchValue, $options: 'i' } , 'details.subject': { $regex: subject, $options: 'i' }})
-        .skip((page - 1)*perPage).limit(perPage);
-        const totalProducts = await Book.find({ [searchType] : { $regex: searchValue, $options: 'i' } , 'details.subject': { $regex: subject, $options: 'i' }}).countDocuments();
-        const flashMsg = await req.flash('msg');
-        res.render('./admin/books', {
-            'bookList': bookList,
-            page: page,
-            lastPage: Math.ceil(totalProducts/perPage),
-            searchType: req.query.searchType,
-            searchValue: searchValue,
-            subject: subject,
-            flashMsg: flashMsg.length? flashMsg[0]: undefined
-        });
-    } catch (error) {
-        console.log(error);
-        next();
-    }
-
-}; 
-
 exports.getAddBook = async(req , res, next) => {
     try {
         const flashMsg = await req.flash('msg');
@@ -337,63 +291,63 @@ exports.getBookIssue = async (req , res, next) => {
 }; 
 
 exports.postBookIssue = async (req, res, next) => {
+    console.log(req.body);
     try {
-        await calulateFines();
-        const errors = validationResult(req).array();
-        if(errors.length){
-            const flashMsg = await req.flash('msg');
-            res.render('./admin/bookIssue', {
-                error: errors[0],
-                oldInput: req.body,
-                flashMsg: flashMsg.length? flashMsg[0]: undefined
-            });
-            return;
-        }
-        const book = await Book.findOne({
-            'bookID': req.body.bookID
-        });
-        
-        const user = await User.findOne({
-            'details.username': req.body.username
-        });
-        
-        if (user.overdueFine || (user.currentIssues.length === user.bookIssuePrivilege.maxBooks)) {
+        const book = await Book.findOne({ 'bookID': req.body.bookID });
+        const user = await User.findOne({ 'details.username': req.body.username });
+        if(!user){
             const error = {
-                msg:user.overdueFine ? "User has Overdue Fine": "User has already issued Max number of books"
+                msg: "User not found"
             };
-            const flashMsg = await req.flash('msg');
-            res.render('./admin/bookIssue', {
+            return res.status(400).json({
                 error: error,
-                oldInput: req.body,
-                flashMsg: flashMsg.length? flashMsg[0]: undefined
             });
-            return;
+        }
+        if(!book){
+            const error = {
+                msg: "Book not found"
+            };
+            return res.status(400).json({
+                error: error,
+            });
+        }
+        if ((user.currentIssues.length === user.bookIssuePrivilege.maxBooks)) {
+            const error = {
+                msg: "User has already issued Max number of books"
+            };
+            return res.status(400).json({
+                error: error,
+            });
+        }
+        if(!book.availability){
+            const error = {
+                msg: "Book is not available"
+            };
+            return res.status(400).json({
+                error: error,
+            });
         }
         const currentDate = new Date();
         const returnDate = new Date(currentDate);
         returnDate.setDate(returnDate.getDate() + user.bookIssuePrivilege.issueDuration);
-        
         const bookIssue = await BookIssue.create({
             bookID: book._id,
             userID: user._id,
             issueDate: currentDate,
             returnDate: returnDate,
         });
-        
         user.currentIssues.push(bookIssue);
         book.issueHistory.push(bookIssue);
         book.availability = false;
         await bookIssue.save();
         await user.save();
         await book.save();
-        await req.flash('msg' , 'Book Successfully Issued');
-        res.redirect('/admin/bookIssue');
+        res.status(200).json({ message: 'Book Successfully Issued' });
     } catch (err) {
         console.log(err);
-        next();
+        next(err);
     }
 };
-
 
 exports.getBookReturn = async (req , res, next) => {
     try {
@@ -413,6 +367,7 @@ exports.getBookReturn = async (req , res, next) => {
 
 exports.getIssueData = async (req , res) => {
     try{
+        console.log(req.query);
         const book = await Book.findOne({
             'bookID': req.query.bookID
         });
@@ -439,62 +394,53 @@ exports.getIssueData = async (req , res) => {
 exports.postBookReturn = async (req, res, next) => {
     try {
         await calulateFines();
-        const errors = validationResult(req).array();
-        if(errors.length){
-            const flashMsg = await req.flash('msg');
-            res.render('./admin/bookReturn', {
-                error: errors[0],
-                oldInput: req.body,
-                flashMsg: flashMsg.length? flashMsg[0]: undefined
-            });
-            return;
+        const book = await Book.findOne({ 'bookID': req.body.bookID });
+        if (!book) {
+            return res.status(404).json({ message: 'Book not found' });
         }
-        const book = await Book.findOne({
-            'bookID': req.body.bookID
-        });
         const bookIssueID = book.issueHistory[book.issueHistory.length - 1];
         const bookIssue = await BookIssue.findById(bookIssueID);
+        if (!bookIssue) {
+            return res.status(404).json({ message: 'Book issue record not found' });
+        }
         const user = await User.findById(bookIssue.userID);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
         bookIssue.returnStatus = true;
         bookIssue.dateofReturn = new Date();
-        book.availability = true; 
+        book.availability = true;
         user.issueHistory.push(bookIssue);
         user.currentIssues = user.currentIssues.filter(element => !element.equals(bookIssue._id));
         user.overdueFine -= Math.max(0, daysDiff(bookIssue.dateofReturn, bookIssue.returnDate)) * 15;
         await bookIssue.save();
         await book.save();
         await user.save();
-        await req.flash('msg', 'Book Successfully Returned');
-        res.redirect('/admin/books');
+        res.status(200).json({ message: 'Book Successfully Returned' });
     } catch (err) {
         console.log(err);
-        next();
+        next(err);
     }
 };
 
-exports.getBook = async (req , res , next) => {
+exports.getBook = async (req, res) => {
     try {
-        let book = await Book.findOne({bookID: req.params.bookID});
-        if(!book){
-            res.redirect('/admin/books');
+        let book = await Book.findOne({ bookID: req.params.bookID });
+        if (!book) {
+            res.status(404).json({ message: 'Book not found' });
             return;
         }
         await book.populate('issueHistory');
         await book.populate('issueHistory.userID');
-        console.log(book.issueHistory[0]);
-        if(!book) res.redirect('/admin/books');
-        else {
-            const flashMsg = await req.flash('msg');
-            res.render('./admin/book', {
-                book : book,
-                flashMsg : flashMsg.length? flashMsg[0]: undefined
-            }); 
-        }
+        console.log(book);
+        res.json({
+            book: book
+        });
     } catch (error) {
         console.log(error);
-        next();
+        res.status(500).json({ message: 'Internal server error' });
     }
-}; 
+};
 
 
 exports.getCalulateFines = async (req, res, next) => {

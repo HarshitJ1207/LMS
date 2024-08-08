@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 function NavigationBar() {
-    return (
+    const {isLoggedIn} = useContext(AuthContext);
+    if(!isLoggedIn) return (
         <nav className="bg-gray-800 p-4 flex">
             <div className="flex space-x-4">
                 <Link to="/" className="text-white hover:text-blue-500 hover:underline">Home</Link>
@@ -10,11 +12,27 @@ function NavigationBar() {
                 <Link to="/Studio" className="text-white hover:text-blue-500 hover:underline">Studio</Link>
                 <Link to="/About" className="text-white hover:text-blue-500 hover:underline">About</Link>
             </div>
-            <div className="ml-auto">
+            <div className="ml-auto flex space-x-4">
+                <Link to="/Signup" className="text-white hover:text-blue-500 hover:underline">Signup</Link>
                 <Link to="/Login" className="text-white hover:text-blue-500 hover:underline">Login</Link>
             </div>
         </nav>
     );
+    if(isLoggedIn) return(
+        <nav className="bg-gray-800 p-4 flex">
+            <div className="flex space-x-4">
+                <Link to="/admin" className="text-white hover:text-blue-500 hover:underline">Home</Link>
+                <Link to="/admin/Books" className="text-white hover:text-blue-500 hover:underline">Books</Link>
+                <Link to="/admin/Users" className="text-white hover:text-blue-500 hover:underline">Users</Link>
+                <Link to="/admin/BookIssue" className="text-white hover:text-blue-500 hover:underline">Book Issue</Link>
+                <Link to="/admin/BookReturn" className="text-white hover:text-blue-500 hover:underline">Book return</Link>
+            </div>
+            <div className="ml-auto flex space-x-4">
+                <Link to="/Signout" className="text-white hover:text-blue-500 hover:underline">Signout</Link>
+            </div>
+        </nav>
+    );
+
 }
 
 export default NavigationBar;

@@ -1,6 +1,7 @@
 const User = require('../models/user');
 const Book = require('../models/book');
 const Studio = require('../models/studio');
+const { query } = require('express-validator');
 const perPage = 30;
 
 exports.getHome = async(req , res, next) => {
@@ -18,6 +19,18 @@ exports.getHome = async(req , res, next) => {
         next();
     }
 };
+
+exports.getLoginStatus = async (req , res) => {
+    try{
+        if(req.session.user) return res.json({loggedIn: true});
+        else return res.json({loggedIn: false});
+    }
+    catch(error){
+        console.log(error);
+        return res.json({loggedIn: false});
+    }
+}
+
 exports.getLogin = async (req , res, next) => {
     try {
         const flashMsg = await req.flash('msg');
@@ -35,42 +48,50 @@ exports.getLogin = async (req , res, next) => {
         next();
     }
 };
-exports.postLogin = async (req , res, next) => {
+
+exports.postLogin = async (req, res) => {
     try {
         let error = await req.flash('errors');
-        if(error.length){
+        if (error.length) {
             const flashMsg = await req.flash('msg');
-            res.render('./member/login', {
+            return res.status(400).json({
                 error: error[0],
                 oldInput: req.body,
-                flashMsg: flashMsg.length ? flashMsg[0]: undefined
+                flashMsg: flashMsg.length ? flashMsg[0] : undefined
             });
-            return;
         }
+
+        console.log(req.body);
+
         let user = await User.findOne({
             'details.username': req.body.username,
             'details.password': req.body.password
         });
-        if(!user){
+
+        if (!user) {
             const flashMsg = await req.flash('msg');
-            await req.flash('errors' , 'Email and Password do not match');
+            await req.flash('errors', 'Email and Password do not match');
             error = await req.flash('errors');
-            res.render('./member/login', {
+            return res.status(401).json({
                 error: error[0],
                 oldInput: req.body,
-                flashMsg: flashMsg.length ? flashMsg[0]: undefined
+                flashMsg: flashMsg.length ? flashMsg[0] : undefined
             });
-            return;
-        }
-        else{
+        } else {
+            console.log('User found');
             req.session.user = user;
-            await req.session.save(error => console.log(error));
+            await req.session.save(err => {
+                if (err) {
+                    console.log(err);
+                    return res.status(500).json({ message: 'Session save error' });
+                }
+            });
             await req.flash('msg', "You have successfully logged in");
-            res.redirect('/');
+            return res.status(200).json({ message: 'Login successful' });
         }
     } catch (error) {
-        console.log(error); 
-        next();
+        console.log(error);
+        return res.status(500).json({ message: 'Internal server error' });
     }
 };
 
@@ -89,29 +110,29 @@ exports.getLogout = async (req , res , next) => {
 
 exports.getBooks = async (req, res, next) => {
     try {
-        const params = new URLSearchParams();
-        Object.keys(req.query).forEach(key => {
-            params.append(key, decodeURIComponent(req.query[key]));
-        });
-        const originalQueryString = params.toString();
-        console.log('Original Query String:', originalQueryString);
+        console.log(req.query);
+        const { page = 1, searchType = 'title', searchValue = '', subject = '' } = req.query;
 
-        let page = req.query.page ? +req.query.page : 1;
-        let searchType = req.query.searchType ? `details.${req.query.searchType}` : 'details.title';
-        let searchValue = req.query.searchValue ? decodeURIComponent(req.query.searchValue): '';
-        let subject = req.query.subject ? decodeURIComponent(req.query.subject) : '';
-        let bookList = await Book.find({
-            [searchType]: { $regex: searchValue, $options: 'i' },
-            'details.subject': { $regex: subject, $options: 'i' }
-        })
-        .skip((page - 1) * perPage)
+        const decodedPage = parseInt(page, 10);
+        const decodedSearchType = `details.${decodeURIComponent(searchType)}`;
+        const decodedSearchValue = decodeURIComponent(searchValue);
+        const decodedSubject = decodeURIComponent(subject);
+
+        const query = {
+            [decodedSearchType]: { $regex: decodedSearchValue, $options: 'i' },
+            'details.subject': { $regex: decodedSubject, $options: 'i' }
+        };
+
+        console.log(query);
+
+        const bookList = await Book.find(query)
+        .skip((decodedPage - 1) * perPage)
         .limit(perPage);
-        res.json({
-            bookList: bookList
-        });
+
+        res.json({ bookList });
     } catch (error) {
-        console.log(error);
-        next();
+        console.error('Error fetching books:', error);
+        next(error);
     }
 };
 

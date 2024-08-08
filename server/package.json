@@ -9,16 +9,16 @@
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "express-validator": "^7.0.1",
-    "library-management-system": "file:",
     "mongodb": "^6.2.0",
     "mongoose": "^8.0.0",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "server": "file:"
   },
   "devDependencies": {
     "csv-parser": "^3.0.0",
     "nodemon": "^3.0.1"
   },
-  "name": "library-management-system",
+  "name": "server",
   "version": "1.0.0",
   "description": "ISDL lab Project",
   "main": "index.js",
