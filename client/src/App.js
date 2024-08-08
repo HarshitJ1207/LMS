@@ -22,6 +22,7 @@ import AdminAddBook from './pages/admin/AdminAddBook';
 import AdminRemoveBook from './pages/admin/AdminRemoveBook';
 import AdminAddUser from './pages/admin/AdminAddUser';
 import AdminRemoveUser from './pages/admin/AdminRemoveUser';
+import Me from './pages/member/Me';
 
 function App() {
     const { login } = useContext(AuthContext);
@@ -50,6 +51,7 @@ function App() {
                 <Routes>
                     <Route path="/Test" element={<Test />} />
                     <Route path="/" element={<Home />} />
+                    <Route path="/me" element={<Me />} />
                     <Route path="/books" element={<Books />} />
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/login" element={<Login />} />

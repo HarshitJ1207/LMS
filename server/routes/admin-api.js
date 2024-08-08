@@ -54,5 +54,11 @@ router.post("/addBook", auth.authAdmin, [
     .isNumeric().withMessage('ISBN must be a numeric value'),
 ], adminController.postAddBook);
 
+router.delete("/removeUser/:username" , auth.authAdmin, adminController.deleteUser);
+router.delete("/removeBook/:bookID" , auth.authAdmin, [
+    check('bookID')
+        .matches(/^[A-Z]\d{4}$/).withMessage('Book ID should follow the pattern: capital letter followed by 4 digits')
+], adminController.deleteBook);
+
 module.exports = router;
  

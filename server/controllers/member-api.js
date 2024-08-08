@@ -102,23 +102,28 @@ exports.getBooks = async (req, res, next) => {
     }
 };
 
-exports.getMe = async (req , res) => {
+exports.getMe = async (req, res) => {
     try {
-        if(!req.session.user) return res.redirect('/');
-        const flashMsg = await req.flash('msg');
-        const user = await User.findOne({'details.username' : req.session.user.details.username});
-        await user.populate('issueHistory');
-        await user.populate('currentIssues');
-        await user.populate('issueHistory.bookID');
-        await user.populate('currentIssues.bookID');
-        res.render('./member/me', {
-            user : user,
-            flashMsg: flashMsg.length ? flashMsg[0]: undefined
-        });
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const user = await User.findOne({ 'details.username': req.session.user.details.username })
+            .populate('issueHistory')
+            .populate('currentIssues')
+            .populate('issueHistory.bookID')
+            .populate('currentIssues.bookID');
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.status(200).json({ user });
     } catch (error) {
-        console.log(error);
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
-} 
+};
 
 
 exports.getStudio = async (req , res, next) => { 

@@ -95,19 +95,13 @@ exports.getuser = async (req, res) => {
     }
 };
 
-exports.postAddUser = async (req, res, next) => {
+exports.postAddUser = async (req, res) => {
     try {
         const errors = validationResult(req).array();
-        if(errors.length){
-            console.log(errors);
-            console.log(errors[0]);
-            const flashMsg = await req.flash('msg');
-            res.render('./admin/addUser', {
-                error: errors[0],
-                oldInput: req.body,
-                flashMsg: flashMsg.length? flashMsg[0]: undefined
+        if (errors.length) {
+            return res.status(400).json({
+                error: "validation failed",
             });
-            return;
         }
         let maxBooks = 0;
         let issueDuration = 0;
@@ -125,7 +119,7 @@ exports.postAddUser = async (req, res, next) => {
                 maxBooks = 5;
                 issueDuration = 30;
                 break;
-                case 'Contractual Staff':
+            case 'Contractual Staff':
                 maxBooks = 3;
                 issueDuration = 30;
                 break;
@@ -150,7 +144,7 @@ exports.postAddUser = async (req, res, next) => {
                 issueDuration = 15;
                 break;
         }
-        User.create({
+        const user = await User.create({
             details: {
                 username: req.body.username,
                 email: req.body.email,
@@ -158,40 +152,55 @@ exports.postAddUser = async (req, res, next) => {
                 userType: req.body.userType,
                 password: req.body.password,
             },
-            admin: req.body.userType === 'Admin' ? true : false,
+            admin: req.body.userType === 'Admin',
             bookIssuePrivilege: {
                 maxBooks: maxBooks,
                 issueDuration: issueDuration,
             },
-        })
-        .then((user) => user.save())
-        .then(async() => {
-            await req.flash('msg', 'User Successfully Added');
-            res.redirect('/admin/users')
-        })
-        .catch((err) => {
-            console.log(err);
-            next();
+        });
+        await user.save();
+        res.status(201).json({
+            message: 'User successfully added'
         });
     } catch (error) {
-        console.log(error);
-        next();
+        console.error(error);
+        res.status(500).json({
+            error: error.message
+        });
     }
 };
 
 
+exports.deleteUser = async (req, res) => {
+    console.log('delete user request', req.params);
+    try {
+        const username = req.params.username.trim();
+        const user = await User.findOne({ 'details.username': username });
+        if (!user) {
+            return res.status(404).json({
+                error: 'User not found'
+            });
+        }
+        await User.deleteOne({ 'details.username': username });
+        res.status(200).json({
+            message: 'User successfully deleted'
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: error.message
+        });
+    }
+};
 
-exports.postAddBook = async (req , res , next) => {
+exports.postAddBook = async (req, res) => {
+    console.log(req.body);
     try {
         const errors = validationResult(req).array();
-        if(errors.length){
-            const flashMsg = await req.flash('msg');
-            res.render('./admin/addBook', {
-                error: errors[0],
-                oldInput: req.body,
-                flashMsg: flashMsg.length? flashMsg[0]: undefined
+        if (errors.length) {
+            return res.status(400).json({
+                error: errors[0].msg,
             });
-            return;
         }
         const doc = await dbs.findOne();
         const bookID = newBookID(doc.lastAllocatedBookID);
@@ -201,18 +210,46 @@ exports.postAddBook = async (req , res , next) => {
                 subject: req.body.subject,
                 title: req.body.title,
                 author: req.body.author,
-                subject: req.body.subject,
                 ISBN: req.body.ISBN,
             },
         });
         doc.lastAllocatedBookID = bookID;
         await book.save();
         await doc.save();
-        await req.flash('msg' , 'Book Successfully Added');
-        res.redirect('/admin/books');
+        res.status(201).json({
+            message: 'Book Successfully Added',
+        });
     } catch (error) {
-        console.log(error);
-        next();
+        res.status(500).json({
+            error: error.message,
+        });
+    }
+};
+
+
+exports.deleteBook = async (req, res) => {
+    try {
+        const errors = validationResult(req).array();
+        if (errors.length) {
+            return res.status(400).json({
+                error: errors[0].msg,
+            });
+        }
+        const bookID = req.params.bookID;
+        const book = await Book.findOneAndDelete({ bookID: bookID });
+
+        if (!book) {
+            return res.status(404).json({
+                error: 'Book not found',
+            });
+        }
+        res.status(200).json({
+            message: 'Book Successfully Deleted',
+        });
+    } catch (error) {
+        res.status(500).json({
+            error: error.message,
+        });
     }
 };
 
