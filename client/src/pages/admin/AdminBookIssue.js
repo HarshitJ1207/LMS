@@ -4,10 +4,15 @@ const AdminBookIssue = () => {
     const [username, setUsername] = useState('');
     const [bookID, setBookID] = useState('');
     const [userData, setUserData] = useState(null);
-    const [error, setError] = useState('');
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
+    const [formLoading , setFormLoading] = useState(false);
 
 
     const handleBlur = async () => {
+        setUserData(null);
+        setError('');
+        setSuccess(null);
         if (username) {
             try {
                 const url = `http://localhost:8000/api/admin/users/${username}`;
@@ -16,7 +21,10 @@ const AdminBookIssue = () => {
                     credentials: 'include'
                 });
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    const errorData = await response.json().catch(() => {
+                        throw new Error('Network response was not ok');
+                    });
+                    throw new Error(errorData.error || 'Network response was not ok');
                 }
                 const data = await response.json();
                 setUserData(data.user);
@@ -24,7 +32,7 @@ const AdminBookIssue = () => {
                 console.log(data.user);
             } catch (err) {
                 setUserData(null);
-                setError('User not found');
+                setError(err.message);
             }
         } else {
             setUserData(null);
@@ -32,7 +40,9 @@ const AdminBookIssue = () => {
     }
 
     const handleSubmit = async (e) => {
+        if(formLoading) return;
         e.preventDefault();
+        setFormLoading(true);
         try {
             const url = `http://localhost:8000/api/admin/bookIssue`;
             const response = await fetch(url, {
@@ -44,12 +54,20 @@ const AdminBookIssue = () => {
                 body: JSON.stringify({ username, bookID })
             });
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                const errorData = await response.json().catch(() => {
+                    throw new Error('Network response was not ok');
+                });
+                throw new Error(errorData.error || 'Network response was not ok');
             }
             const data = await response.json();
-            console.log(data);
+            setError(null);
+            setSuccess(data.message);
+            handleBlur();
         } catch (err) {
-            console.log(err);
+            setError(err.message);
+            setSuccess(null);
+        } finally{
+            setFormLoading(false);
         }
     };
 
@@ -79,7 +97,6 @@ const AdminBookIssue = () => {
                             </div>
                         </div>
                     )}
-                    {error && <p className="text-red-500">{error}</p>}
                     <div className="mb-4">
                         <label className="block text-lg font-semibold mb-2">Book ID</label>
                         <input
@@ -88,9 +105,17 @@ const AdminBookIssue = () => {
                             onChange={(e) => setBookID(e.target.value)}
                             className="w-full p-2 border rounded"
                             required
-                        />
+                            />
                     </div>
-                    <button type="submit" className="bg-blue-500 text-white p-2 rounded">Issue Book</button>
+                    {error && <p className="text-red-500">{error}</p>}
+                    {success && <p className="text-green-500">{success}</p>}
+                    <button
+                        type="submit"
+                        disabled={formLoading}
+                        className={`p-2 rounded ${formLoading ? "bg-gray-500 cursor-not-allowed" : "bg-blue-500"} text-white`}
+                    >
+                        {formLoading ? "Issuing..." : "Issue Book"}
+                    </button>
                 </form>
             </div>
         </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import LoadingComponent from '../../components/extras/LoadingComponent';
-
+import ErrorComponent from '../../components/extras/ErrorComponent';
 const UserDetailsCard = ({ userDetails }) => {
     return (
         <div className="container mx-auto mt-3 bg-slate-200 shadow-md rounded-lg p-6 mb-6">
@@ -63,7 +63,7 @@ const IssueHistoryCard = ({ issues, title }) => {
                         <tbody>
                             {issues.map(issue => (
                                 <tr key={issue._id}>
-                                    <td className="py-2 px-4 border-b">{issue.bookID._id}</td>
+                                    <td className="py-2 px-4 border-b">{issue.bookID.bookID}</td>
                                     <td className="py-2 px-4 border-b">{new Date(issue.issueDate).toLocaleDateString()}</td>
                                     <td className="py-2 px-4 border-b">{new Date(issue.returnDate).toLocaleDateString()}</td>
                                     <td className="py-2 px-4 border-b">{issue.daysOverdue}</td>
@@ -81,6 +81,7 @@ const AdminUserDetail = () => {
     const { id } = useParams();
     const [loading, setLoading] = useState(true);
     const [userDetails, setUserDetails] = useState(null);
+    const [error, setError] = useState(null);   
 
     useEffect(() => {
         const fetchUserDetails = async () => {
@@ -91,19 +92,26 @@ const AdminUserDetail = () => {
                     credentials: 'include'
                 });
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    const errorData = await response.json().catch(() => {
+                        throw new Error('Network response was not ok');
+                    });
+                    throw new Error(errorData.error || 'Network response was not ok');
                 }
                 const data = await response.json();
                 setUserDetails(data.user);
                 console.log(data.user);
             } catch (error) {
-                console.error('Error fetching user details:', error);
+                setError(error);
             } finally {
                 setLoading(false);
             }
         }
         fetchUserDetails();
     }, [id]);
+
+    if (error) {
+        return <ErrorComponent error={error} />;
+    }
 
     if (loading) {
         return <LoadingComponent />;

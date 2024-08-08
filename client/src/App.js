@@ -18,6 +18,10 @@ import Test from './pages/Test';
 import { AuthContext } from './context/AuthContext'; 
 import LoadingComponent from './components/extras/LoadingComponent';
 import NavigationBar from './components/NavigationBar';
+import AdminAddBook from './pages/admin/AdminAddBook';
+import AdminRemoveBook from './pages/admin/AdminRemoveBook';
+import AdminAddUser from './pages/admin/AdminAddUser';
+import AdminRemoveUser from './pages/admin/AdminRemoveUser';
 
 function App() {
     const { login } = useContext(AuthContext);
@@ -58,6 +62,10 @@ function App() {
                     <Route path="/admin/user/:id" element={<PrivateRoute element={AdminUserDetail} />} />
                     <Route path="/admin/bookIssue" element={<PrivateRoute element={AdminBookIssue} />} />
                     <Route path="/admin/bookReturn" element={<PrivateRoute element={AdminBookReturn} />} />
+                    <Route path="/admin/addBook" element={<PrivateRoute element={AdminAddBook} />} />
+                    <Route path="/admin/removeBook" element={<PrivateRoute element={AdminRemoveBook} />} />
+                    <Route path="/admin/addUser" element={<PrivateRoute element={AdminAddUser} />} />
+                    <Route path="/admin/removeUser" element={<PrivateRoute element={AdminRemoveUser} />} />
                 </Routes>
             </Router>
         </React.Fragment>

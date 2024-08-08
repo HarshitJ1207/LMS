@@ -18,13 +18,16 @@ const AdminBookDetail = () => {
                     credentials: 'include'
                 });
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    const errorData = await response.json().catch(() => {
+                        throw new Error('Network response was not ok');
+                    });
+                    throw new Error(errorData.error || 'Network response was not ok');
                 }
                 const data = await response.json();
                 setBook(data.book);
                 setIssueHistory(data.book.issueHistory);
             } catch (error) {
-                setError(error.message);
+                setError(error);
             } finally {
                 setLoading(false);
             }

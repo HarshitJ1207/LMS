@@ -3,28 +3,35 @@ import React, { useState } from 'react';
 const AdminBookIssue = () => {
     const [bookID, setBookID] = useState('');
     const [issueData, setIssueData] = useState(null);
-    const [error, setError] = useState('');
-
+    const [error, setError] = useState();
+    const [success, setSuccess] = useState(null);
+    const [formLoading , setFormLoading] = useState(false);
     const handleSubmit = async (e) => {
+        if(formLoading) return;
+        setFormLoading(true);
+        setSuccess(null);
+        setError(null);
         e.preventDefault();
         if(!issueData){
             try {
                 const url = `http://localhost:8000/api/admin/issueData?bookID=${bookID}`;
-                console.log(url);
                 const response = await fetch(url, {
                     method: 'GET',
                     credentials: 'include',
                 });
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    const errorData = await response.json().catch(() => {
+                        throw new Error('Network response was not ok');
+                    });
+                    throw new Error(errorData.error || 'Network response was not ok');
                 }
                 const data = await response.json();
                 setIssueData(data);
-                setError('');
-                console.log(data.user);
             } catch (err) {
-                setIssueData(null);
-                setError('User not found');
+                setError(err);
+            }
+            finally{
+                setFormLoading(false);
             }
         }
         else{
@@ -39,12 +46,18 @@ const AdminBookIssue = () => {
                     body: JSON.stringify({ bookID })
                 });
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    const errorData = await response.json().catch(() => {
+                        throw new Error('Network response was not ok');
+                    });
+                    throw new Error(errorData.error || 'Network response was not ok');
                 }
                 const data = await response.json();
-                console.log(data);
+                setSuccess(data.message);
             } catch (err) {
-                console.log(err);
+                setError(err);
+            }
+            finally{
+                setFormLoading(false);
             }
         }
     };
@@ -73,9 +86,16 @@ const AdminBookIssue = () => {
                                 </div>
                             </div>
                         )}
-                        {error && <p className="text-red-500">{error}</p>}
+                        {error && <p className="text-red-500">{error.message}</p>}
+                        {success && <p className="text-green-500">{success}</p>}
                     </div>
-                    <button type="submit" className="bg-blue-500 text-white p-2 rounded">{issueData ? 'Return Book': 'Search Book'}</button>
+                    <button
+                        type="submit"
+                        className={`p-2 rounded ${formLoading ? "bg-gray-500 cursor-not-allowed" : "bg-blue-500"} text-white`}
+                        disabled={formLoading}
+                    >
+                        {issueData ? 'Return Book' : 'Search Book'}
+                    </button>
                 </form>
             </div>
         </div>

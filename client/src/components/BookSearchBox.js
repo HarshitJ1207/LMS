@@ -1,22 +1,8 @@
 import React, { useState } from 'react';
-import { useEffect } from 'react';
 
-function BookSearchBox({ query, setQuery }) {
+function BookSearchBox({ query, setQuery , setLoading , loading }) {
     console.log('render query' , query);
-    const [formValues, setFormValues] = useState({
-        searchType: query.searchType,
-        subject: query.subject,
-        searchValue: query.searchValue 
-    });
-
-    useEffect(() => {
-        setFormValues({
-            searchType: query.searchType || 'title',
-            subject: query.subject || '',
-            searchValue: query.searchValue || '' 
-        });
-    }, [query]);
-    console.log('render form' , formValues);
+    const [formValues, setFormValues] = useState({searchType: 'title' , searchValue: '' , subject: ''});
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -30,6 +16,7 @@ function BookSearchBox({ query, setQuery }) {
         e.preventDefault();
         console.log('submit', formValues);
         setQuery({ ...formValues, page: 1 });
+        setLoading(true);
     };
 
     const handleReset = () => {
@@ -39,6 +26,7 @@ function BookSearchBox({ query, setQuery }) {
             searchValue: ''
         });
         setQuery({ page: 1, searchType: 'title', searchValue: '', subject: '' });
+        setLoading(true);
     };
 
     return (

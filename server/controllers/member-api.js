@@ -1,24 +1,9 @@
 const User = require('../models/user');
 const Book = require('../models/book');
 const Studio = require('../models/studio');
-const { query } = require('express-validator');
 const perPage = 30;
 
-exports.getHome = async(req , res, next) => {
-    try {
-        if(req.session.user && req.session.user.admin) {
-            res.redirect('/admin');
-            return;
-        }
-        const flashMsg = await req.flash('msg');
-        res.render('./member/home', {
-            flashMsg: flashMsg.length ? flashMsg[0]: undefined,
-        });
-    } catch (error) {
-        console.log(error);
-        next();
-    }
-};
+
 
 exports.getLoginStatus = async (req , res) => {
     try{
@@ -31,23 +16,7 @@ exports.getLoginStatus = async (req , res) => {
     }
 }
 
-exports.getLogin = async (req , res, next) => {
-    try {
-        const flashMsg = await req.flash('msg');
-        const errors = await req.flash('errors');
-        res.render('./member/login', {
-            error: errors.length ? errors[0]: undefined,
-            oldInput: {
-                'username': '',
-                'password': ''
-            },
-            flashMsg: flashMsg.length ? flashMsg[0]: undefined
-        });
-    } catch (error) {
-        console.log(error);
-        next();
-    }
-};
+
 
 exports.postLogin = async (req, res) => {
     try {
@@ -95,18 +64,6 @@ exports.postLogin = async (req, res) => {
     }
 };
 
-exports.getLogout = async (req , res , next) => {
-    try {
-        req.session.user = null;
-        await req.flash('msg', "You have been logged out");
-        await req.session.save(error => console.log(error));
-        res.redirect('/');
-    } catch (error) {
-        console.log(error);
-        next();
-    }
-
-}
 
 exports.getBooks = async (req, res, next) => {
     try {
@@ -114,6 +71,10 @@ exports.getBooks = async (req, res, next) => {
         const { page = 1, searchType = 'title', searchValue = '', subject = '' } = req.query;
 
         const decodedPage = parseInt(page, 10);
+        if (isNaN(decodedPage) || decodedPage < 1) {
+            decodedPage = 1;
+        }
+
         const decodedSearchType = `details.${decodeURIComponent(searchType)}`;
         const decodedSearchValue = decodeURIComponent(searchValue);
         const decodedSubject = decodeURIComponent(subject);
@@ -126,13 +87,18 @@ exports.getBooks = async (req, res, next) => {
         console.log(query);
 
         const bookList = await Book.find(query)
-        .skip((decodedPage - 1) * perPage)
-        .limit(perPage);
-
-        res.json({ bookList });
+            .skip((decodedPage - 1) * perPage)
+            .limit(perPage);
+        res.status(200).json({ bookList });
     } catch (error) {
         console.error('Error fetching books:', error);
-        next(error);
+        if (error instanceof SyntaxError) {
+            res.status(400).json({ error: 'Invalid query parameters' });
+        } else if (error.name === 'MongoError') {
+            res.status(500).json({ error: 'Database error' });
+        } else {
+            res.status(500).json({ error: 'Internal server error' });
+        }
     }
 };
 

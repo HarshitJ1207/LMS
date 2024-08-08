@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import LoadingComponent from '../../components/extras/LoadingComponent';
 import { useNavigate } from 'react-router-dom';
+import ErrorComponent from '../../components/extras/ErrorComponent';
 
-const UserSearchBox = ({ query, setQuery }) => {
+const UserSearchBox = ({ query, setQuery , setLoading }) => {
     const [formState, setFormState] = useState(query);
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormState((prevState) => ({
@@ -14,9 +14,19 @@ const UserSearchBox = ({ query, setQuery }) => {
     };
 
     const handleSubmit = (e) => {
+        console.log("Handle Submit");
         e.preventDefault();
+        setLoading(true);   
         setQuery(formState);
+        console.log('loading');
     };
+
+
+    const resetHandler = () => {
+        setQuery({searchType: 'username', userType: 'any', searchValue: ''});
+        setFormState({searchType: 'username', userType: 'any', searchValue: ''});
+        setLoading(true);
+    }
 
     return (
         <div className="mx-auto p-4 flex shadow-md w-8/12">
@@ -57,20 +67,18 @@ const UserSearchBox = ({ query, setQuery }) => {
                         className="border border-gray-300 rounded-md p-2 flex-grow"
                     />
                     <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded-md">Search</button>
-                    <button className="bg-blue-500 text-white py-2 px-4 rounded-md" onClick = {() => {
-                        setQuery({searchType: 'username', userType: 'any', searchValue: ''}); setFormState({searchType: 'username', userType: 'any', searchValue: ''});
-                    }}>Reset</button>
+                    <button type = "button" className="bg-blue-500 text-white py-2 px-4 rounded-md" onClick = {resetHandler}>Reset</button>
                 </form>
             </div>
         </div>
     );
 };
 
-const UserTable = ({ query }) => {
-    const navigator = useNavigate();
+const UserTable = ({ query , loading , setLoading }) => {
+    const navigate = useNavigate();
     const [userList, setUserList] = useState([]);
-    const [loading, setLoading] = useState(true);
-
+    const [error, setError] = useState(null);
+    
     useEffect(() => {
         const fetchUserList = async () => {
             try {
@@ -78,27 +86,35 @@ const UserTable = ({ query }) => {
                 const url = `http://localhost:8000/api/admin/users?${params}`;
                 console.log(url);
                 const response = await fetch(url, {
-                    credentials: 'include'
+                    credentials: 'include', 
                 });
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    const errorData = await response.json().catch(() => {
+                        throw new Error('Network response was not ok');
+                    });
+                    throw new Error(errorData.error || 'Network response was not ok');
                 }
                 const data = await response.json();
                 setUserList(data.userList);
-                setLoading(false);
             } catch (error) {
-                console.error('Error:', error);
+                setError(error);
+            }
+            finally {
+                setLoading(false);
             }
         };
         fetchUserList();
-    }, [query]);
-
+    }, [query , setLoading]);
+    
     const idClickHandler = (event) => {
         const userID = event.target.innerHTML;
-        navigator(`/admin/user/${userID}`);
-        
+        navigate(`/admin/user/${userID}`);
     };
-
+    
+    if (error) {
+        return <ErrorComponent error={error} />;
+    }
+    
     return (
         <div className="container mx-auto p-4 text-center shadow-md w-10/12">
             {loading ? (
@@ -132,17 +148,19 @@ const UserTable = ({ query }) => {
 };
 
 const AdminUsers = () => {
+    console.log('render');
     const [query, setQuery] = useState({
         searchType: 'username',
         userType: 'any',
-        searchValue: ''
+        searchValue: '',
     });
-
+    const [loading, setLoading] = useState(true);
+    
     console.log(query);
     return (
         <React.Fragment>
-            <UserSearchBox query={query} setQuery={setQuery} />
-            <UserTable query={query} />
+            <UserSearchBox query={query} setQuery={setQuery} setLoading = {setLoading} />
+            <UserTable  query={query} setLoading = {setLoading} loading = {loading} />
         </React.Fragment>
     );
 };

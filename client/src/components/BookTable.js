@@ -3,21 +3,35 @@ import LoadingComponent from '../components/extras/LoadingComponent';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-function BookTable({ query, setQuery }) {
+import ErrorComponent from './extras/ErrorComponent';
+function BookTable({ query, setQuery, loading, setLoading }) {
     const navigator = useNavigate();
-    const [loaded, setLoaded] = useState(false);
     const [bookList, setBookList] = useState([]);
     const {isLoggedIn} = useContext(AuthContext);
-
+    const [error , setError] = useState(null);
     useEffect(() => {
-        const params = new URLSearchParams(query).toString();
-        const url = `http://localhost:8000/api/books?${params.toString()}`;
-        fetch(url)
-            .then(response => response.json())
-            .then(data => setBookList(data.bookList))
-            .then(() => setLoaded(true))
-            .catch(error => console.error('Error:', error));
-    }, [query]);
+        setLoading(true);   
+        setError(null);
+        setBookList([]);
+        const fetchBooks = async () => {
+            try {
+                const response = await fetch(`http://localhost:8000/api/books?page=${query.page}&searchType=${query.searchType}&searchValue=${query.searchValue}&subject=${query.subject}`);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => {
+                        throw new Error('Network response was not ok');
+                    });
+                    throw new Error(errorData.error || 'Network response was not ok');
+                }
+                const data = await response.json();
+                setBookList(data.bookList);
+            } catch (err) {
+                setError(err);
+            }finally {
+                setLoading(false);
+            }
+        };
+        fetchBooks();
+    }, [query ,setLoading]);
 
     const idClickHandler = (event) => {
         if(isLoggedIn) {
@@ -26,7 +40,11 @@ function BookTable({ query, setQuery }) {
         }
     };
 
-    if (!loaded) {
+    if(error) {
+        <ErrorComponent error={error}/>
+    }
+
+    if (loading) {
         return (
             <LoadingComponent/>
         );

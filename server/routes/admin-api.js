@@ -6,16 +6,14 @@ const User = require('../models/user')
 const Book = require('../models/book')
 const { check } = require('express-validator');
 
-router.get("/" , auth.authAdmin, adminController.getAdminDashboard);
 router.get("/users" , auth.authAdmin, adminController.getusers);
-router.get("/addUser" , auth.authAdmin, adminController.getAddUser);
 router.get("/users/:username" , auth.authAdmin, adminController.getuser);
-router.get("/addBook" , auth.authAdmin, adminController.getAddBook);
-router.get("/bookIssue" , auth.authAdmin, adminController.getBookIssue);
-router.get("/bookReturn" , auth.authAdmin, adminController.getBookReturn);
 router.get("/books/:bookID" , auth.authAdmin, adminController.getBook);
 router.get("/issueData" , adminController.getIssueData);
 router.get("/calulateFines" , auth.authAdmin, adminController.getCalulateFines);
+
+router.post("/bookReturn" , auth.authAdmin, adminController.postBookReturn);
+router.post("/bookIssue",adminController.postBookIssue);
 
 router.post("/addUser" , auth.authAdmin,[
     check('username')
@@ -50,10 +48,6 @@ router.post("/addUser" , auth.authAdmin,[
 ], adminController.postAddUser);
 
 
-router.post("/bookReturn" , auth.authAdmin, adminController.postBookReturn);
-
-
-router.post("/bookIssue",adminController.postBookIssue);
 
 router.post("/addBook", auth.authAdmin, [
     check('ISBN').isLength({ min: 13, max: 13 }).withMessage('ISBN number must be a 13-digit number')
