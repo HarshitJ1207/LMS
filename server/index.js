@@ -24,7 +24,6 @@ app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 
 app.use(session({
-    name:'LMS-sid',
     secret: 'your-secret-key', 
     resave: false,
     proxy: true,
