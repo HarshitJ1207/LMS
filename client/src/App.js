@@ -23,6 +23,7 @@ import AdminRemoveBook from './pages/admin/AdminRemoveBook';
 import AdminAddUser from './pages/admin/AdminAddUser';
 import AdminRemoveUser from './pages/admin/AdminRemoveUser';
 import Me from './pages/member/Me';
+import PageNotFound from './pages/PageNotFound'; // Import the PageNotFound component
 
 function App() {
     const { login } = useContext(AuthContext);
@@ -80,6 +81,7 @@ function App() {
                     <Route path="/admin/removeBook" element={<PrivateRoute element={AdminRemoveBook} />} />
                     <Route path="/admin/addUser" element={<PrivateRoute element={AdminAddUser} />} />
                     <Route path="/admin/removeUser" element={<PrivateRoute element={AdminRemoveUser} />} />
+                    <Route path="*" element={<PageNotFound />} /> {/* Catch-all route for unrecognized URLs */}
                 </Routes>
             </Router>
         </React.Fragment>

@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import LoadingComponent from '../../components/extras/LoadingComponent';
+import ErrorComponent from '../../components/extras/ErrorComponent';
 
 const AdminBookDetail = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [book, setBook] = useState(null);
     const [issueHistory, setIssueHistory] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -35,14 +38,36 @@ const AdminBookDetail = () => {
         fetchBookDetails();
     }, [id]);
 
+    const handleRemoveBook = async () => {
+        try {
+            const response = await fetch(
+                `http://localhost:8000/api/admin/removeBook/${id}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: 'include',
+                }
+            );
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => {
+                    throw new Error("Network response was not ok");
+                });
+                throw new Error(errorData.error || "Network response was not ok");
+            }
+            navigate('/admin/books');
+        } catch (error) {
+            setError(error);
+        }
+    };
+
     if (loading) {
         return <LoadingComponent />;
     }
     
     if (error) {
-        return <div className="flex justify-center items-center h-screen">
-            <div className="text-xl font-semibold text-red-600">Error: {error}</div>
-        </div>;
+        return <ErrorComponent error={error} />;
     }
 
     return (
@@ -68,6 +93,12 @@ const AdminBookDetail = () => {
                                 <span className="font-semibold text-lg w-32">ISBN:</span>
                                 <span className="text-lg">{book.details.ISBN}</span>
                             </div>
+                            <button 
+                                onClick={handleRemoveBook} 
+                                className="mt-4 bg-red-500 text-white py-2 px-4 rounded"
+                            >
+                                Remove Book
+                            </button>
                         </div>
                     )}
                 </div>

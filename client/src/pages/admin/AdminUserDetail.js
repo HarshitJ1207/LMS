@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import LoadingComponent from '../../components/extras/LoadingComponent';
 import ErrorComponent from '../../components/extras/ErrorComponent';
-const UserDetailsCard = ({ userDetails }) => {
+
+const UserDetailsCard = ({ userDetails, onRemoveUser }) => {
     return (
         <div className="container mx-auto mt-3 bg-slate-200 shadow-md rounded-lg p-6 mb-6">
             <h2 className="text-2xl font-bold mb-4 border-b pb-2">User Details</h2>
@@ -37,6 +38,12 @@ const UserDetailsCard = ({ userDetails }) => {
                         <span className="text-lg">{userDetails.overdueFine}</span>
                     </div>
                 </div>
+                <button 
+                    onClick={onRemoveUser} 
+                    className="mt-4 bg-red-500 text-white py-2 px-4 rounded"
+                >
+                    Remove User
+                </button>
             </div>
         </div>
     );
@@ -77,8 +84,10 @@ const IssueHistoryCard = ({ issues, title }) => {
         </div>
     );
 };
+
 const AdminUserDetail = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [userDetails, setUserDetails] = useState(null);
     const [error, setError] = useState(null);   
@@ -109,6 +118,27 @@ const AdminUserDetail = () => {
         fetchUserDetails();
     }, [id]);
 
+    const handleRemoveUser = async () => {
+        try {
+            const response = await fetch(
+                `http://localhost:8000/api/admin/removeUser/${id}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: 'include',
+                }
+            );
+            if (!response.ok) {
+                throw new Error('Failed to remove user');
+            }
+            navigate('/admin/users');
+        } catch (error) {
+            setError(error);
+        }
+    };
+
     if (error) {
         return <ErrorComponent error={error} />;
     }
@@ -119,9 +149,9 @@ const AdminUserDetail = () => {
 
     return (
         <div className="container mx-auto p-4">
-            <UserDetailsCard userDetails={userDetails} />
-            <IssueHistoryCard issues = {userDetails.currentIssues} title = {'Current Issues'} />
-            <IssueHistoryCard issues = {userDetails.issueHistory} title = {'Past Issues'} />
+            <UserDetailsCard userDetails={userDetails} onRemoveUser={handleRemoveUser} />
+            <IssueHistoryCard issues={userDetails.currentIssues} title={'Current Issues'} />
+            <IssueHistoryCard issues={userDetails.issueHistory} title={'Past Issues'} />
         </div>
     );
 };

@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext'; 
 
-function BookSearchBox({ query, setQuery , setLoading , loading }) {
-    console.log('render query' , query);
-    const [formValues, setFormValues] = useState({searchType: 'title' , searchValue: '' , subject: ''});
-
+function BookSearchBox({ query, setQuery, setLoading}) {
+    const navigate = useNavigate();
+    const { isLoggedIn } = useContext(AuthContext); 
+    console.log('render query', query);
+    const [formValues, setFormValues] = useState({ searchType: 'title', searchValue: '', subject: '' });
+    const [dropdownVisible, setDropdownVisible] = useState(false);
+    console.log(isLoggedIn);
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormValues({
@@ -29,8 +34,20 @@ function BookSearchBox({ query, setQuery , setLoading , loading }) {
         setLoading(true);
     };
 
+    const toggleDropdown = () => {
+        setDropdownVisible(!dropdownVisible);
+    };
+
+    const handleAddBook = () => {
+        navigate('/admin/addBook');
+    };
+
+    const handleRemoveBook = () => {
+        navigate('/admin/removeBook');
+    };
+
     return (
-        <div className="shadow-md m-3 border h-auto p-4 rounded-lg bg-white">
+        <div className="relative shadow-md m-3 border h-auto p-4 rounded-lg bg-white">
             <form onSubmit={onSubmit} className="flex flex-row items-center justify-center w-full flex-wrap">
                 <select
                     name="searchType"
@@ -69,6 +86,32 @@ function BookSearchBox({ query, setQuery , setLoading , loading }) {
                 >
                     Reset
                 </button>
+                {isLoggedIn === 'Admin' && (
+                    <div className="relative ml-4">
+                        <button
+                            className="flex items-center justify-center w-8 h-8 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300"
+                            onClick={toggleDropdown} type="button"
+                        >
+                            &#x22EE;
+                        </button>
+                        {dropdownVisible && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg">
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                                    onClick={handleAddBook} type="button"
+                                >
+                                    Add Book
+                                </button>
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                                    onClick={handleRemoveBook} type="button"
+                                >
+                                    Remove Book
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </form>
         </div>
     );
