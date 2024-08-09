@@ -115,7 +115,12 @@ exports.postLogout = async (req, res) => {
         if (err) {
             return res.status(500).json({ message: 'Session destroy error' });
         }
-        res.clearCookie('connect.sid', { path: '/' });
+        res.clearCookie("connect.sid", {
+			path: "/",
+			sameSite: "none",
+			secure: true,
+			httpOnly: true,
+		});
         res.status(200).json({ message: 'Logout successful' });
     });  
 };
