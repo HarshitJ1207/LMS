@@ -49,7 +49,7 @@ exports.postLogin = async (req, res) => {
     }
 };
 
-exports.getBooks = async (req, res, next) => {
+exports.getBooks = async (req, res) => {
     try {
         console.log(req.query);
         const { page = 1, searchType = 'title', searchValue = '', subject = '' } = req.query;

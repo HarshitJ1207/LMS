@@ -86,7 +86,7 @@ const Me = () => {
     useEffect(() => {
         const fetchUserDetails = async () => {
             try {
-                const url = `http://localhost:8000/api/me`;
+                const url = `${process.env.REACT_APP_API_BASE_URL}/me`;
                 console.log(url);
                 const response = await fetch(url, {
                     credentials: 'include'

@@ -255,7 +255,7 @@ exports.deleteBook = async (req, res) => {
 
 
 
-exports.postBookIssue = async (req, res, next) => {
+exports.postBookIssue = async (req, res) => {
     console.log(req.body);
     try {
         const book = await Book.findOne({ 'bookID': req.body.bookID });

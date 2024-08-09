@@ -3,43 +3,43 @@ const express = require('express');
 const bodyParser = require('body-parser'); 
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const dbs = require('./models/databaseStats.js');
 const User = require('./models/user.js');
 
-
 const MONGODB_URI = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.9ronrfd.mongodb.net/${process.env.MONGODB_DBNAME}?retryWrites=true&w=majority`;
 const app = express();
 
 const corsOptions = {
-    origin: 'http://localhost:3000',
-    credentials: true
+    origin: process.env.CLIENT_URL,
+    credentials: true, 
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
+app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 
 app.use(session({
-   secret: 'your-secret-key',
-   resave: false,
-   saveUninitialized: false,
-   store: MongoStore.create({
+    secret: process.env.SESSION_SECRET || 'default-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
         mongoUrl: MONGODB_URI,
         stringify: false,
-    })
-})); 
+    }),
+    proxy: true,
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24, 
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', 
+        secure: process.env.NODE_ENV === 'production', 
+        httpOnly: true, 
+    }
+}));
 
 
-app.use((req , res , next) => {
-    if(req.session.user) res.locals.loggedIn = true;
-    else res.locals.loggedIn = false;
-    next();
-})
-
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());  
-
 
 const memberApiRoutes = require('./routes/member-api.js');
 const adminApiRoutes = require('./routes/admin-api.js');
@@ -47,6 +47,9 @@ const adminApiRoutes = require('./routes/admin-api.js');
  
 app.use('/api/admin',adminApiRoutes);
 app.use('/api',memberApiRoutes);
+app.use('*' , (req , res) => {
+    res.status(404).json({error: 'Page not found'});
+});
 
 connectDB();
  

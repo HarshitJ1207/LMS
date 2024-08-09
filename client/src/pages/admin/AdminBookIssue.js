@@ -15,7 +15,7 @@ const AdminBookIssue = () => {
         setSuccess(null);
         if (username) {
             try {
-                const url = `http://localhost:8000/api/admin/users/${username}`;
+                const url = `${process.env.REACT_APP_API_BASE_URL}/admin/users/${username}`;
                 console.log(url);
                 const response = await fetch(url, {
                     credentials: 'include'
@@ -44,7 +44,7 @@ const AdminBookIssue = () => {
         e.preventDefault();
         setFormLoading(true);
         try {
-            const url = `http://localhost:8000/api/admin/bookIssue`;
+            const url = `${process.env.REACT_APP_API_BASE_URL}/admin/bookIssue`;
             const response = await fetch(url, {
                 method: 'POST',
                 credentials: 'include',

@@ -14,7 +14,7 @@ const AdminBookIssue = () => {
         e.preventDefault();
         if(!issueData){
             try {
-                const url = `http://localhost:8000/api/admin/issueData?bookID=${bookID}`;
+                const url = `${process.env.REACT_APP_API_BASE_URL}/admin/issueData?bookID=${bookID}`;
                 const response = await fetch(url, {
                     method: 'GET',
                     credentials: 'include',
@@ -36,7 +36,7 @@ const AdminBookIssue = () => {
         }
         else{
             try {
-                const url = `http://localhost:8000/api/admin/bookReturn`;
+                const url = `${process.env.REACT_APP_API_BASE_URL}/admin/bookReturn`;
                 const response = await fetch(url, {
                     method: 'POST',
                     credentials: 'include',

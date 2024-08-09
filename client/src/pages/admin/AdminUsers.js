@@ -128,7 +128,7 @@ const UserTable = ({ query , loading , setLoading }) => {
         const fetchUserList = async () => {
             try {
                 const params = new URLSearchParams(query).toString();
-                const url = `http://localhost:8000/api/admin/users?${params}`;
+                const url = `${process.env.REACT_APP_API_BASE_URL}/admin/users?${params}`;
                 console.log(url);
                 const response = await fetch(url, {
                     credentials: 'include', 

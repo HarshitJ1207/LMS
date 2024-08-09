@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
     const login = (userStatus = true) => setIsLoggedIn(userStatus);
     const logout = async () => {
         setIsLoggedIn(false);
-        await fetch('http://localhost:8000/api/logout', { method: 'POST', credentials: 'include' });
+        await fetch(`${process.env.REACT_APP_API_BASE_URL}/logout`, { method: 'POST', credentials: 'include' });
     };
 
     return (

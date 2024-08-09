@@ -15,7 +15,7 @@ const AdminBookDetail = () => {
     useEffect(() => {
         const fetchBookDetails = async () => {
             try {
-                const url = `http://localhost:8000/api/admin/books/${id}`;
+                const url = `${process.env.REACT_APP_API_BASE_URL}/admin/books/${id}`;
                 console.log(url);
                 const response = await fetch(url, {
                     credentials: 'include'
@@ -41,7 +41,7 @@ const AdminBookDetail = () => {
     const handleRemoveBook = async () => {
         try {
             const response = await fetch(
-                `http://localhost:8000/api/admin/removeBook/${id}`,
+                `${process.env.REACT_APP_API_BASE_URL}/admin/removeBook/${id}`,
                 {
                     method: "DELETE",
                     headers: {

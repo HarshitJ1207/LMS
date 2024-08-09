@@ -38,7 +38,7 @@ const AdminAddBook = () => {
 		}
 		try {
 			const response = await fetch(
-				"http://localhost:8000/api/admin/addBook",
+				`${process.env.REACT_APP_API_BASE_URL}/admin/addBook`,
 				{
 					method: "POST",
                     credentials: 'include',

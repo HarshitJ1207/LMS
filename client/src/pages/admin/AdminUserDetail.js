@@ -95,7 +95,7 @@ const AdminUserDetail = () => {
     useEffect(() => {
         const fetchUserDetails = async () => {
             try {
-                const url = `http://localhost:8000/api/admin/users/${id}`;
+                const url = `${process.env.REACT_APP_API_BASE_URL}/admin/users/${id}`;
                 console.log(url);
                 const response = await fetch(url, {
                     credentials: 'include'
@@ -121,7 +121,7 @@ const AdminUserDetail = () => {
     const handleRemoveUser = async () => {
         try {
             const response = await fetch(
-                `http://localhost:8000/api/admin/removeUser/${id}`,
+                `${process.env.REACT_APP_API_BASE_URL}/admin/removeUser/${id}`,
                 {
                     method: "DELETE",
                     headers: {
