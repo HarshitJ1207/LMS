@@ -18,7 +18,7 @@ const userSchema = new Schema({
         },
         userType:{ 
             type: String,
-            required: true
+            default: 'Guest'
         },
         password: {
             type: String,
@@ -28,15 +28,16 @@ const userSchema = new Schema({
     bookIssuePrivilege:{
         maxBooks: {
             type: Number,
+            default: 1
         },
         issueDuration: {
             type: Number,
+            default: 3
         }
     },
     
     admin:{
         type: Boolean,
-        required: true,
         default: false
     },
     overdueFine:{

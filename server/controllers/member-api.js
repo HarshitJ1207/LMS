@@ -125,7 +125,48 @@ exports.postLogout = async (req, res) => {
     });  
 };
 
+exports.postSignup = async (req, res) => {
+    const { username, email, contactNumber, password, confirmPassword } = req.body;
 
+    const validateForm = (data) => {
+        const { username, password, confirmPassword, contactNumber } = data;
+    
+        if (username.length < 4 || username.length > 12) {
+            return 'Username must be between 4 and 12 characters long';
+        }
+        if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,12}$/.test(password)) {
+            return 'Password must be alphanumeric, contain at least one letter and one number, and be between 4 and 12 characters long';
+        }
+        if (password !== confirmPassword) {
+            return 'Passwords must match';
+        }
+        if (!/^\d{10}$/.test(contactNumber)) {
+            return 'Contact number must be 10 digits';
+        }
+        if (!/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/.test(email)) {
+            return 'Invalid email address';
+        }
+        return null;
+    };
+
+    const validationError = validateForm({ username, password, confirmPassword, contactNumber});
+    if (validationError) {
+        return res.status(400).json({ error: validationError });
+    }
+    try {
+        const user = await User.create({
+            details: {
+                username: username,
+                email: email,
+                contactNumber: contactNumber,
+                password: password,
+            },
+        });
+        res.status(201).json({ message: 'User created successfully', user });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 
 // exports.getStudio = async (req , res, next) => { 
 //     try {
