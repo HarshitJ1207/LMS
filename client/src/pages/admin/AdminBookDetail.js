@@ -116,10 +116,10 @@ const AdminBookDetail = () => {
                                 </thead>
                                 <tbody>
                                     {issueHistory.map((issue, index) => (
-                                        <tr key={issue._id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                                        <tr className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                                             <td className="py-2 px-4 border-b border-gray-200 text-sm">{issue.userID.details.username}</td>
                                             <td className="py-2 px-4 border-b border-gray-200 text-sm">{new Date(issue.issueDate).toLocaleDateString()}</td>
-                                            <td className="py-2 px-4 border-b border-gray-200 text-sm">{issue.returnDate ? new Date(issue.returnDate).toLocaleDateString() : 'Not returned yet'}</td>
+                                            <td className="py-2 px-4 border-b border-gray-200 text-sm">{issue.dateofReturn ? new Date(issue.dateofReturn).toLocaleDateString() : 'Not returned yet'}</td>
                                         </tr>
                                     ))}
                                 </tbody>

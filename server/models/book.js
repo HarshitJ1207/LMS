@@ -8,12 +8,10 @@ const bookSchema = new Schema({
         required: true,
         default: true
     },
-    
     bookID: {
         type: String,
         required: true
     },
-    
     details:{
         title: {
             type: String,

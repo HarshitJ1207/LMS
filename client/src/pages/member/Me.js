@@ -32,10 +32,6 @@ const UserDetailsCard = ({ userDetails }) => {
                         <span className="font-semibold text-lg w-32">Issue Duration:</span>
                         <span className="text-lg">{userDetails.bookIssuePrivilege.issueDuration} days</span>
                     </div>
-                    <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-                        <span className="font-semibold text-lg w-32">Overdue Fine:</span>
-                        <span className="text-lg">{userDetails.overdueFine}</span>
-                    </div>
                 </div>
             </div>
         </div>
@@ -61,15 +57,17 @@ const IssueHistoryCard = ({ issues, title }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {issues.map(issue => (
-                                <tr key={issue._id}>
-                                    <td className="py-2 px-4 border-b">{issue.bookID.bookID}</td>
-                                    <td className="py-2 px-4 border-b">{new Date(issue.issueDate).toLocaleDateString()}</td>
-                                    <td className="py-2 px-4 border-b">{new Date(issue.returnDate).toLocaleDateString()}</td>
-                                    <td className="py-2 px-4 border-b">{issue.daysOverdue}</td>
-                                    <td className="py-2 px-4 border-b">{issue.fine}</td>
-                                </tr>
-                            ))}
+                            {issues.map((issue, index) => {
+                                return (
+                                    <tr key = {index}>
+                                        <td className="py-2 px-4 border-b">{issue.bookID.bookID}</td>
+                                        <td className="py-2 px-4 border-b">{new Date(issue.issueDate).toLocaleDateString()}</td>
+                                        <td className="py-2 px-4 border-b">{new Date(issue.dateofReturn || issue.returnDate).toLocaleDateString()}</td>
+                                        <td className="py-2 px-4 border-b">{issue.daysOverdue}</td>
+                                        <td className="py-2 px-4 border-b">{issue.fine}</td>
+                                    </tr>
+                                )
+                            })}
                         </tbody>
                     </table>
                 </div>
@@ -82,6 +80,7 @@ const Me = () => {
     const [loading, setLoading] = useState(true);
     const [userDetails, setUserDetails] = useState(null);
     const [error, setError] = useState(null);   
+    console.log(userDetails);
 
     useEffect(() => {
         const fetchUserDetails = async () => {

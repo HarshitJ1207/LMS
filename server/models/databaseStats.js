@@ -7,10 +7,20 @@ const dbs = new Schema({
         type: String,
         default: null
     },
-    lastUpdate: {
-        type:Date,
-        default: null
-    }
+    totalBooks: {
+        type: Number,
+        default: 0
+    },
+    totalUsers:{
+        type: Number,
+        default: 0
+    },
+    recentActivities: [
+        {
+            type: String,
+            default: []
+        }
+    ],
 });
 
 module.exports = mongoose.model('databaseStats', dbs);

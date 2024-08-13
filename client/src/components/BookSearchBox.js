@@ -2,11 +2,11 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext'; 
 
-function BookSearchBox({ query, setQuery, setLoading}) {
+function BookSearchBox({ query, setQuery, setLoading, formValues, setFormValues }) {
     const navigate = useNavigate();
     const { isLoggedIn } = useContext(AuthContext); 
     console.log('render query', query);
-    const [formValues, setFormValues] = useState({ searchType: 'title', searchValue: '', subject: '' });
+    console.log('formValues', formValues);
     const [dropdownVisible, setDropdownVisible] = useState(false);
     console.log(isLoggedIn);
     const handleChange = (e) => {

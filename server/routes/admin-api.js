@@ -9,7 +9,6 @@ router.get("/users" , auth.authAdmin, adminController.getusers);
 router.get("/users/:username" , auth.authAdmin, adminController.getuser);
 router.get("/books/:bookID" , auth.authAdmin, adminController.getBook);
 router.get("/issueData" , adminController.getIssueData);
-router.get("/calulateFines" , auth.authAdmin, adminController.getCalulateFines);
 
 router.post("/bookReturn" , auth.authAdmin, adminController.postBookReturn);
 router.post("/bookIssue",adminController.postBookIssue);

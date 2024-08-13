@@ -1,13 +1,24 @@
+const moment = require('moment');
 const User = require('../models/user');
 const Book = require('../models/book');
-const Studio = require('../models/studio');
 const perPage = 30;
 
+
+const calculateDaysOverdue = (dateofReturn, returnDate) => {
+	const returnDateMoment = moment(returnDate);
+	const dateofReturnMoment = moment(dateofReturn);
+	const daysOverdue = dateofReturnMoment.diff(returnDateMoment, "days");
+	return daysOverdue > 0 ? daysOverdue : 0;
+};
+
+const calculateFine = (daysOverdue) => {
+	const finePerDay = 15; 
+	return daysOverdue * finePerDay;
+};
 
 
 exports.getLoginStatus = async (req , res) => {
     try{
-        console.log('GET /api/member/loginStatus', req.session.user);
         if(req.session.user) return res.json({userType: req.session.user.details.userType});
         else return res.json({userType: false});
     }
@@ -16,8 +27,6 @@ exports.getLoginStatus = async (req , res) => {
         return res.json({userType: false});
     }
 }
-
-
 
 exports.postLogin = async (req, res) => {
     try {
@@ -94,21 +103,51 @@ exports.getMe = async (req, res) => {
         }
 
         const user = await User.findOne({ 'details.username': req.session.user.details.username })
-            .populate('issueHistory')
-            .populate('currentIssues')
-            .populate('issueHistory.bookID')
-            .populate('currentIssues.bookID');
+        .populate({
+            path: 'issueHistory',
+            model: 'BookIssue',
+            populate: {
+                path: 'bookID',
+                model: 'Book'
+            }
+        })
+        .populate({
+            path: 'currentIssues',
+            model: 'BookIssue',
+            populate: {
+                path: 'bookID',
+                model: 'Book'
+            }
+        });
 
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        res.status(200).json({ user });
+        const userCopy = JSON.parse(JSON.stringify(user));
+        let totalFine = 0;
+        userCopy.currentIssues.forEach(issue => {
+            const currentDate = new Date();
+            const daysOverdue = calculateDaysOverdue(currentDate, issue.returnDate);
+            const fine = calculateFine(daysOverdue);
+            issue.daysOverdue = daysOverdue;
+            issue.fine = fine;
+            totalFine += fine;
+        });
+
+        userCopy.issueHistory.forEach(issue => {
+            const daysOverdue = calculateDaysOverdue(issue.dateofReturn, issue.returnDate);
+            const fine = calculateFine(daysOverdue);
+            issue.daysOverdue = daysOverdue;
+            issue.fine = fine;
+        });
+        console.log(totalFine);
+        userCopy.overdueFine = totalFine;
+        res.status(200).json({ user: userCopy });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
-
 
 exports.postLogout = async (req, res) => {
     req.session.destroy(err => {
@@ -167,85 +206,3 @@ exports.postSignup = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
-// exports.getStudio = async (req , res, next) => { 
-//     try {
-//         if(!req.session.user) return res.redirect('/login');
-//         const user = await User.findOne({'details.username' : req.session.user.details.username});
-//         const bookingHistory = await Studio.find({
-//             userID: user._id
-//         });
-//         const flashMsg = await req.flash('msg');
-//         res.render('./member/studio', {
-//             user : user,
-//             flashMsg: flashMsg.length? flashMsg[0]: undefined,
-//             error: null,
-//             oldInput: {
-//                 bookingDate: null, 
-//                 bookingTime: null,
-//                 people: null,
-//                 purpose: null,
-//                 equipment: [],
-//                 topic: null
-//             },
-//             bookingHistory: bookingHistory
-//         });
-//     } catch (error) {
-//         console.log(error);
-//         next();
-//     }
-// }
-// exports.postStudio = async (req , res, next) => { 
-//     try {
-//         if(!req.session.user) return res.redirect('/login');
-//         console.log(req.body);
-//         const user = await User.findOne({'details.username' : req.session.user.details.username});
-//         const existingBooking = await Studio.findOne({
-//             bookingDate: req.body.bookingDate,
-//             bookingTime: req.body.bookingTime,
-//         })
-//         if(existingBooking){
-//             const flashMsg = await req.flash('msg');
-//             const bookingHistory = await Studio.find({
-//                 userID: user._id
-//             })
-//             res.render('./member/studio', {
-//                 user : user,
-//                 flashMsg: flashMsg.length? flashMsg[0]: undefined,
-//                 error: 'Slot is unavailable',
-//                 oldInput: {
-//                     bookingDate: req.body.bookingDate,
-//                     bookingTime: req.body.bookingTime,
-//                     people: req.body.people,
-//                     purpose: req.body.purpose,
-//                     equipment: req.body.equipment,
-//                     topic: req.body.topic
-//                 },
-//                 bookingHistory: bookingHistory
-//             });
-//             return;
-//         }
-//         else{
-//             await Studio.create({
-//                 userID: user._id,
-//                 bookingDate: req.body.bookingDate,
-//                 bookingTime: req.body.bookingTime,
-//                 people: req.body.people,
-//                 purpose: req.body.purpose,
-//                 equipment: req.body.equipment,
-//                 topic: req.body.topic
-//             })
-//             await req.flash('msg', 'Slot successfully booked');
-//             const flashMsg = await req.flash('msg');
-//             res.render('./member/home', {
-//                 flashMsg: flashMsg.length ? flashMsg[0]: undefined,
-//             });
-//             return
-//         }
-//     } catch (error) {
-//         console.log(error);
-//         next();
-//     }
-// }
-
-

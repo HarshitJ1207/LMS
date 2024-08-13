@@ -1,9 +1,11 @@
+const moment = require('moment');   
 const { validationResult } = require('express-validator')
 
 const User = require('../models/user');
 const Book = require('../models/book');
 const BookIssue = require('../models/bookIssue');
 const dbs = require('../models/databaseStats');
+
 
 
 function newBookID(oldBookID){
@@ -19,43 +21,18 @@ function newBookID(oldBookID){
     return A + num;
 };
 
-function daysDiff(date1, date2) {
-    date1.setHours(0, 0, 0, 0);
-    date2.setHours(0, 0, 0, 0);
-    if(date2 >= date1) return 0;
-    const oneDay = 24 * 60 * 60 * 1000;
-    const timeDifference = date1.getTime() - date2.getTime();
-    const daysDifference = Math.round(timeDifference / oneDay);
-    return daysDifference;
-}
 
-async function calulateFines() {
-    const currentDate = new Date();
-    const doc = await dbs.findOne();
-    const oldDate = doc.lastUpdate;
-
-    if (oldDate && daysDiff(currentDate, oldDate) === 0) {
-        return;
-    }
-
-    doc.lastUpdate = currentDate;
-    await doc.save();
-
-    const users = await User.find();
-
-    for (const user of users) {
-        let fine = 0;
-        await user.populate('currentIssues');
-
-        for (const issue of user.currentIssues) {
-            fine += Math.max(0, daysDiff(currentDate, issue.returnDate)) * 15;
-        }
-
-        user.overdueFine = fine;
-        await user.save();
-    }
+const calculateDaysOverdue = (dateofReturn, returnDate) => {
+	const returnDateMoment = moment(returnDate);
+	const dateofReturnMoment = moment(dateofReturn);
+	const daysOverdue = dateofReturnMoment.diff(returnDateMoment, "days");
+	return daysOverdue > 0 ? daysOverdue : 0;
 };
 
+const calculateFine = (daysOverdue) => {
+	const finePerDay = 15; 
+	return daysOverdue * finePerDay;
+};
 
 exports.getusers = async (req, res) => {
     try {
@@ -78,23 +55,53 @@ exports.getusers = async (req, res) => {
     }
 };
 
-
 exports.getuser = async (req, res) => {
     try {
-        const user = await User.findOne({ 'details.username': req.params.username });
+        const user = await User.findOne({ 'details.username': req.params.username })
+        .populate({
+            path: 'issueHistory',
+            model: 'BookIssue',
+            populate: {
+                path: 'bookID',
+                model: 'Book'
+            }
+        })
+        .populate({
+            path: 'currentIssues',
+            model: 'BookIssue',
+            populate: {
+                path: 'bookID',
+                model: 'Book'
+            }
+        });
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        await user.populate('issueHistory');
-        await user.populate('currentIssues');
-        await user.populate('issueHistory.bookID');
-        await user.populate('currentIssues.bookID');
-        res.status(200).json({ user });
+        const userCopy = JSON.parse(JSON.stringify(user));
+        let totalFine = 0;
+        userCopy.currentIssues.forEach(issue => {
+            const currentDate = new Date();
+            const daysOverdue = calculateDaysOverdue(currentDate, issue.returnDate);
+            const fine = calculateFine(daysOverdue);
+            issue.daysOverdue = daysOverdue;
+            issue.fine = fine;
+            totalFine += fine;
+        });
+
+        userCopy.issueHistory.forEach(issue => {
+            const daysOverdue = calculateDaysOverdue(issue.dateofReturn, issue.returnDate);
+            const fine = calculateFine(daysOverdue);
+            issue.daysOverdue = daysOverdue;
+            issue.fine = fine;
+        });
+        console.log(totalFine);
+        userCopy.overdueFine = totalFine;
+        res.status(200).json({ user: userCopy });
     } catch (error) {
+        console.error('Error fetching user:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
-
 exports.postAddUser = async (req, res) => {
     try {
         const errors = validationResult(req).array();
@@ -159,6 +166,12 @@ exports.postAddUser = async (req, res) => {
             },
         });
         await user.save();
+        const stats = await dbs.findOne();
+        stats.recentActivities.push(`New user ${req.body.username} added`);
+        if (stats.recentActivities.length > 100) {
+            stats.recentActivities.shift();
+        }
+        await stats.save();
         res.status(201).json({
             message: 'User successfully added'
         });
@@ -181,7 +194,18 @@ exports.deleteUser = async (req, res) => {
                 error: 'User not found'
             });
         }
+        if (user.currentIssues.length > 0) {
+            return res.status(400).json({
+                error: 'User cannot be deleted due to pending book returns'
+            });
+        }
         await User.deleteOne({ 'details.username': username });
+        const stats = await dbs.findOne();
+        stats.recentActivities.push(`User ${username} deleted`);
+        if (stats.recentActivities.length > 100) {
+            stats.recentActivities.shift();
+        }
+        await stats.save();
         res.status(200).json({
             message: 'User successfully deleted'
         });
@@ -216,6 +240,12 @@ exports.postAddBook = async (req, res) => {
         doc.lastAllocatedBookID = bookID;
         await book.save();
         await doc.save();
+        const stats = await dbs.findOne();
+        stats.recentActivities.push(`New book ${bookID} added`);
+        if (stats.recentActivities.length > 100) {
+            stats.recentActivities.shift();
+        }
+        await stats.save();
         res.status(201).json({
             message: 'Book Successfully Added',
         });
@@ -236,13 +266,24 @@ exports.deleteBook = async (req, res) => {
             });
         }
         const bookID = req.params.bookID;
-        const book = await Book.findOneAndDelete({ bookID: bookID });
-
+        const book = await Book.findOne({ bookID: bookID });
         if (!book) {
             return res.status(404).json({
                 error: 'Book not found',
             });
         }
+        if (!book.availability) {
+            return res.status(400).json({
+                error: 'Book is currently issued to a user and cannot be deleted',
+            });
+        }
+        await Book.findOneAndDelete({ bookID: bookID });
+        const stats = await dbs.findOne();
+        stats.recentActivities.push(`Book ${bookID} deleted`);
+        if (stats.recentActivities.length > 100) {
+            stats.recentActivities.shift();
+        }
+        await stats.save();
         res.status(200).json({
             message: 'Book Successfully Deleted',
         });
@@ -252,8 +293,6 @@ exports.deleteBook = async (req, res) => {
         });
     }
 };
-
-
 
 exports.postBookIssue = async (req, res) => {
     console.log(req.body);
@@ -292,6 +331,12 @@ exports.postBookIssue = async (req, res) => {
         await bookIssue.save();
         await user.save();
         await book.save();
+        const stats = await dbs.findOne();
+        stats.recentActivities.push(`Book ${book.bookID} issued to ${user.details.username}`);
+        if (stats.recentActivities.length > 100) {
+            stats.recentActivities.shift();
+        }
+        await stats.save();
         res.status(200).json({ message: 'Book successfully issued' });
     } catch (err) {
         res.status(500).json({ error: 'Internal server error' });
@@ -302,7 +347,6 @@ exports.postBookIssue = async (req, res) => {
 exports.getIssueData = async (req, res) => {
     try {
         console.log(req.query);
-
         if (!req.query.bookID) {
             return res.status(400).json({ error: 'BookID is required' });
         }
@@ -313,7 +357,7 @@ exports.getIssueData = async (req, res) => {
         if (book.availability) {
             return res.status(404).json({ error: 'No issue found for the book' });
         }
-        if(book.issueHistory.length === 0) throw new Error;
+        if (book.issueHistory.length === 0) throw new Error;
         const bookIssueID = book.issueHistory[book.issueHistory.length - 1];
         const bookIssue = await BookIssue.findById(bookIssueID);
         if (!bookIssue) {
@@ -325,18 +369,17 @@ exports.getIssueData = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        const fine = Math.max(0, daysDiff(new Date(), bookIssue.returnDate)) * 15;
-
-        res.status(200).json({ user: user.details.username, fine: fine });
+        const daysOverdue = calculateDaysOverdue(new Date(), bookIssue.returnDate);
+        const fine = daysOverdue * 15;
+        res.status(200).json({ user: user.details.username, daysOverdue: daysOverdue, fine: fine });
     } catch (err) {
         console.error('Error fetching issue data:', err); 
-        res.status(500).json({ error: 'Internal server error' }); 
+        res.status(500).json({ error: err.message || 'Internal server error' }); 
     }
 };
+
 exports.postBookReturn = async (req, res) => {
     try {
-        await calulateFines();
-
         const book = await Book.findOne({ 'bookID': req.body.bookID });
         if (!book) {
             return res.status(404).json({ error: 'Book not found' });
@@ -347,27 +390,27 @@ exports.postBookReturn = async (req, res) => {
         if (!bookIssue) {
             return res.status(404).json({ error: 'Book issue record not found' });
         }
-
         const user = await User.findById(bookIssue.userID);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-
         bookIssue.returnStatus = true;
         bookIssue.dateofReturn = new Date();
         book.availability = true;
         user.issueHistory.push(bookIssue);
         user.currentIssues = user.currentIssues.filter(element => !element.equals(bookIssue._id));
-        user.overdueFine -= Math.max(0, daysDiff(bookIssue.dateofReturn, bookIssue.returnDate)) * 15;
-
         await Promise.all([
             bookIssue.save(),
             book.save(),
             user.save()
         ]);
-
+        const stats = await dbs.findOne();
+        stats.recentActivities.push(`Book ${book.bookID} returned by ${user.details.username}`);
+        if (stats.recentActivities.length > 100) {
+            stats.recentActivities.shift();
+        }
+        await stats.save();
         res.status(200).json({ message: 'Book successfully returned' });
-
     } catch (err) {
         console.error('Error returning book:', err); 
         res.status(500).json({ message: 'Internal server error' }); 
@@ -393,13 +436,3 @@ exports.getBook = async (req, res) => {
     }
 };
 
-
-exports.getCalulateFines = async (req, res, next) => {
-    try {
-        await calulateFines();
-        res.redirect('/admin');
-    } catch (error) {
-        console.log(error);
-        next();
-    }
-};

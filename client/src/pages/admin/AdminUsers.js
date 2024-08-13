@@ -176,7 +176,7 @@ const UserTable = ({ query , loading , setLoading }) => {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {userList.map(user => (
-                            <tr key={user._id} className="hover:bg-gray-100">
+                            <tr className="hover:bg-gray-100">
                                 <td className="py-4 px-6 border-b text-sm text-gray-900 hover:underline cursor-pointer" onClick={idClickHandler}>
                                     {user.details.username}
                                 </td>

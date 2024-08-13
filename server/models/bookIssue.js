@@ -29,15 +29,6 @@ const bookIssueSchema = new Schema({
         type: Date,
         default: null
     },
-    daysOverdue: {
-        type: Number,
-        default: 0
-    },
-    fine: {
-        type: Number,
-        default: 0
-    },
-
 });
 
 module.exports = mongoose.model('BookIssue' , bookIssueSchema);

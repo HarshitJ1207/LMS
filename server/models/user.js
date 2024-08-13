@@ -35,22 +35,15 @@ const userSchema = new Schema({
             default: 3
         }
     },
-    
     admin:{
         type: Boolean,
         default: false
     },
-    overdueFine:{
-        type: Number,
-        default: 0
-    },
-
     currentIssues: [{
         type: Schema.Types.ObjectId,
         ref: 'BookIssue',
         default: []
     }],
-    
     issueHistory: [{
         type: Schema.Types.ObjectId,
         ref: 'BookIssue',

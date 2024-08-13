@@ -4,7 +4,7 @@ import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ErrorComponent from './extras/ErrorComponent';
-function BookTable({ query, setQuery, loading, setLoading }) {
+function BookTable({ query, setQuery, loading, setLoading, setFormValues }) {   
     const navigator = useNavigate();
     const [bookList, setBookList] = useState([]);
     const {isLoggedIn} = useContext(AuthContext);
@@ -72,13 +72,21 @@ function BookTable({ query, setQuery, loading, setLoading }) {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                     {bookList.map((book, index) => (
-                        <tr key={index}>
+                        <tr key={book.bookID}>
                             <td className="px-6 py-4 whitespace-nowrap" onClick={idClickHandler}>{book.bookID}</td>
                             <td className="px-6 py-4 whitespace-nowrap">{book.details.title}</td>
-                            <td className="px-6 py-4 whitespace-nowrap" onClick={() => setQuery(query => ({searchType: 'author', searchValue: book.details.author , page: 1}))}>
+                            <td className="px-6 py-4 whitespace-nowrap" onClick={() => {
+                                setQuery({searchType: 'author', searchValue: book.details.author , subject: '', page: 1})
+                                setFormValues({searchType: 'author', searchValue: book.details.author , subject: ''})
+                                
+                            }}>
                                 {book.details.author}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap" onClick={() => setQuery(query => ({searchType: 'title', subject: book.details.subject , page: 1 , searchValue: ''}))}>
+                            <td className="px-6 py-4 whitespace-nowrap" onClick={() => {
+                                setQuery({searchType: 'title', searchValue: '', subject: book.details.subject , page: 1})
+                                setFormValues({searchType: 'title', searchValue: '',  subject: book.details.subject})
+                                
+                            }}>
                                 {book.details.subject}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">{book.availability ? 'Available' : 'Unavailable'}</td>
