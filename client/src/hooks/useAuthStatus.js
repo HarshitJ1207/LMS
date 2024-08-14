@@ -15,8 +15,11 @@ const useAuthStatus = () => {
 
         const checkLoginStatus = async () => {
             try {
+                const token = localStorage.getItem('token');
                 const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/loginStatus`, {
-                    credentials: 'include',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
                 });
                 if (!response.ok) {
                     if (isMounted) login(false);

@@ -197,7 +197,9 @@ const UserTable = ({ query, loading, setLoading }) => {
 				const params = new URLSearchParams(query).toString();
 				const url = `${process.env.REACT_APP_API_BASE_URL}/admin/users?${params}`;
 				const response = await fetch(url, {
-					credentials: "include",
+					headers: {
+						Authorization: `Bearer ${localStorage.getItem("token")}`,
+					},
 				});
 				if (!response.ok) {
 					const errorData = await response.json().catch(() => {

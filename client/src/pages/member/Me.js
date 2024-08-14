@@ -145,7 +145,9 @@ const Me = () => {
 			try {
 				const url = `${process.env.REACT_APP_API_BASE_URL}/me`;
 				const response = await fetch(url, {
-					credentials: "include",
+					headers: {
+						Authorization: `Bearer ${localStorage.getItem("token")}`,
+					},
 				});
 				if (!response.ok) {
 					const errorData = await response.json().catch(() => {

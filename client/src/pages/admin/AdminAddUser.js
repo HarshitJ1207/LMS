@@ -80,14 +80,15 @@ const AdminAddUser = () => {
             return;
         }
         try {
+            const token = localStorage.getItem("token");
             const response = await fetch(
                 `${process.env.REACT_APP_API_BASE_URL}/admin/addUser`,
                 {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
                     },
-                    credentials: 'include',
                     body: JSON.stringify({
                         username,
                         email,

@@ -22,10 +22,13 @@ const AdminBookReturn = () => {
         e.preventDefault();
         if(!issueData){
             try {
+                const token = localStorage.getItem('token');
                 const url = `${process.env.REACT_APP_API_BASE_URL}/admin/issueData?bookID=${bookID}`;
                 const response = await fetch(url, {
                     method: 'GET',
-                    credentials: 'include',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    }
                 });
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => {
@@ -44,12 +47,13 @@ const AdminBookReturn = () => {
         }
         else{
             try {
+                const token = localStorage.getItem('token');
                 const url = `${process.env.REACT_APP_API_BASE_URL}/admin/bookReturn`;
                 const response = await fetch(url, {
                     method: 'POST',
-                    credentials: 'include',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({ bookID })
                 });

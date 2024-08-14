@@ -44,13 +44,14 @@ const AdminAddBook = () => {
             return;
         }
         try {
+            const token = localStorage.getItem("token");
             const response = await fetch(
                 `${process.env.REACT_APP_API_BASE_URL}/admin/addBook`,
                 {
                     method: "POST",
-                    credentials: 'include',
                     headers: {
                         "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
                         title,

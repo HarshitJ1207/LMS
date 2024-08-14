@@ -183,9 +183,12 @@ const AdminBookDetail = () => {
     useEffect(() => {
         const fetchBookDetails = async () => {
             try {
+				const token = localStorage.getItem("token");
                 const url = `${process.env.REACT_APP_API_BASE_URL}/admin/books/${id}`;
                 const response = await fetch(url, {
-                    credentials: "include",
+                    headers: {
+						Authorization: `Bearer ${token}`,
+					},
                 });
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => {
@@ -213,14 +216,15 @@ const AdminBookDetail = () => {
 
 	const handleRemoveBook = async () => {
 		try {
+			const token = localStorage.getItem("token");
 			const response = await fetch(
 				`${process.env.REACT_APP_API_BASE_URL}/admin/removeBook/${id}`,
 				{
 					method: "DELETE",
 					headers: {
 						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
 					},
-					credentials: "include",
 				}
 			);
 			if (!response.ok) {

@@ -38,14 +38,15 @@ const AdminRemoveBook = () => {
             return;
         }
         try {
+            const token = localStorage.getItem("token");
             const response = await fetch(
                 `${process.env.REACT_APP_API_BASE_URL}/admin/removeBook/${bookId}`,
                 {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
                     },
-                    credentials: 'include',
                 }
             );
             if (!response.ok) {

@@ -30,8 +30,11 @@ function App() {
     useEffect(() => {
         const checkLoginStatus = async () => {
             try {
+                const token = localStorage.getItem('token');
                 const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/loginStatus`, {
-                    credentials: 'include',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
                 if (!res.ok) {
                     login(false);

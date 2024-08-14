@@ -28,9 +28,8 @@ function LoginForm() {
             const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/login`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                credentials: 'include',
                 body: JSON.stringify(formData),
             });
             if(!response.ok) {
@@ -41,6 +40,7 @@ function LoginForm() {
             }
             const data = await response.json();
             const userType = data.userType;
+            localStorage.setItem('token', data.token);
             setError('');
             login(userType);
             navigate('/');
@@ -50,7 +50,6 @@ function LoginForm() {
             setFormLoading(false);
         }
     };
-
     return (
         <React.Fragment>
             <Paper elevation={3} sx={{ m: 3, p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '80%', maxWidth: 600, mx: 'auto', mt: 5 }}> 

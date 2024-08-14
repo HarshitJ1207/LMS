@@ -36,9 +36,9 @@ const AdminRemoveUser = () => {
                 `${process.env.REACT_APP_API_BASE_URL}/admin/removeUser/${username}`,
                 {
                     method: "DELETE",
-                    credentials: 'include',
                     headers: {
                         "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
                 }
             );

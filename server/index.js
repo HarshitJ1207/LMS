@@ -3,17 +3,14 @@ const express = require('express');
 const bodyParser = require('body-parser'); 
 const mongoose = require('mongoose');
 const cors = require('cors');
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
 const dbs = require('./models/databaseStats.js');
 const User = require('./models/user.js');
-
+const jwt = require('jsonwebtoken');
 const MONGODB_URI = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.9ronrfd.mongodb.net/${process.env.MONGODB_DBNAME}?retryWrites=true&w=majority`;
 const app = express();
 
 const corsOptions = {
     origin: process.env.CLIENT_URL,
-    credentials: true, 
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 };
@@ -21,22 +18,22 @@ const corsOptions = {
 app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
 
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'default-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-        mongoUrl: MONGODB_URI,
-        stringify: false,
-    }),
-    proxy: true,
-    cookie: {
-        maxAge: 1000 * 60 * 60 * 24, 
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', 
-        secure: process.env.NODE_ENV === 'production', 
-        httpOnly: true, 
+app.use('/', async (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+        if (token) {
+            try {
+                const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+                req.user = await User.findOne({ 'details.username': decodedToken.username });
+            } catch (err) {
+                console.error('Token verification or user lookup failed:', err);
+                req.user = null;
+            }
+        }
     }
-}));
+    next();
+});
 
 
 app.use(bodyParser.json());  
