@@ -1,136 +1,154 @@
 import React, { useState } from "react";
+import {
+    Container,
+    Typography,
+    Paper,
+    TextField,
+    Button,
+} from '@mui/material';
 
 const AdminAddBook = () => {
-	const [title, setTitle] = useState("");
-	const [author, setAuthor] = useState("");
-	const [subject, setSubject] = useState("");
-	const [isbn, setIsbn] = useState("");
-	const [errors, setErrors] = useState({});
+    const [title, setTitle] = useState("");
+    const [author, setAuthor] = useState("");
+    const [subject, setSubject] = useState("");
+    const [isbn, setIsbn] = useState("");
+    const [errors, setErrors] = useState({});
     const [formLoading, setFormLoading] = useState(false);
-    const [success , setSuccess] = useState(null);
-    const [responseError , setResponseError] = useState(null);
+    const [success, setSuccess] = useState(null);
+    const [responseError, setResponseError] = useState(null);
 
-	const validate = () => {
-		const errors = {};
-		if (title.length > 100)
-			errors.title = "Title must be less than 100 characters";
-		if (author.length > 100)
-			errors.author = "Author must be less than 100 characters";
-		if (subject.length > 100)
-			errors.subject = "Subject must be less than 100 characters";
-		if (!/^\d{13}$/.test(isbn))
-			errors.isbn = "ISBN must be a 13-digit number";
-		return errors;
-	};
+    const validate = () => {
+        const errors = {};
+        if (title.length > 100)
+            errors.title = "Title must be less than 100 characters";
+        if (author.length > 100)
+            errors.author = "Author must be less than 100 characters";
+        if (subject.length > 100)
+            errors.subject = "Subject must be less than 100 characters";
+        if (!/^\d{13}$/.test(isbn))
+            errors.isbn = "ISBN must be a 13-digit number";
+        return errors;
+    };
 
-	const handleSubmit = async (e) => {
-        if(formLoading) return;
+    const handleSubmit = async (e) => {
+        if (formLoading) return;
         setFormLoading(true);
         setSuccess(null);
         setResponseError(null);
         setErrors({});
-		e.preventDefault();
-		const validationErrors = validate();
-		if (Object.keys(validationErrors).length > 0) {
-			setErrors(validationErrors);
+        e.preventDefault();
+        const validationErrors = validate();
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
             setFormLoading(false);
-			return;
-		}
-		try {
-			const response = await fetch(
-				`${process.env.REACT_APP_API_BASE_URL}/admin/addBook`,
-				{
-					method: "POST",
+            return;
+        }
+        try {
+            const response = await fetch(
+                `${process.env.REACT_APP_API_BASE_URL}/admin/addBook`,
+                {
+                    method: "POST",
                     credentials: 'include',
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						title,
-						author,
-						subject,
-						ISBN:isbn,
-					}),
-				}
-			);
-			if (!response.ok) {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        title,
+                        author,
+                        subject,
+                        ISBN: isbn,
+                    }),
+                }
+            );
+            if (!response.ok) {
                 const errorData = await response.json().catch(() => {
                     throw new Error('Network response was not ok');
                 });
                 throw new Error(errorData.error || 'Network response was not ok');
-			}
-			setTitle("");
-			setAuthor("");
-			setSubject("");
-			setIsbn("");
+            }
+            setTitle("");
+            setAuthor("");
+            setSubject("");
+            setIsbn("");
             const data = await response.json();
-            setSuccess(data.message);   
-		} catch (error) {
-			setResponseError(error.message);
-		} finally{
+            setSuccess(data.message);
+        } catch (error) {
+            setResponseError(error.message);
+        } finally {
             setFormLoading(false);
         }
-	};
+    };
 
-	return (
-        <div className="max-w-md mx-auto mt-10 p-6 bg-slate-300 rounded-lg shadow-lg">
-            <h1 className="text-2xl font-bold mb-6 text-center">Add Book</h1>
-            <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">Title</label>
-                <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-                </div>
-                <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">Author</label>
-                <input
-                    type="text"
-                    value={author}
-                    onChange={(e) => setAuthor(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {errors.author && <p className="text-red-500 text-sm mt-1">{errors.author}</p>}
-                </div>
-                <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">Subject</label>
-                <input
-                    type="text"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {errors.subject && <p className="text-red-500 text-sm mt-1">{errors.subject}</p>}
-                </div>
-                <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">ISBN</label>
-                <input
-                    type="text"
-                    value={isbn}
-                    onChange={(e) => setIsbn(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                {errors.isbn && <p className="text-red-500 text-sm mt-1">{errors.isbn}</p>}
-                </div>
-                <button
-                    type="submit"
-                    className={`w-full py-2 px-4 rounded-lg focus:outline-none focus:ring-2 ${
-                        formLoading
-                            ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                            : 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500'
-                    }`}
-                    disabled={formLoading}
-                >
-                    {formLoading ? 'Loading...' : 'Add Book'}
-                </button>
-                {responseError && <p className="text-red-500 text-sm mt-1">{responseError}</p>}
-                {success && <p className="text-green-500 text-sm mt-1">{success}</p>}
-            </form>
-        </div>
+    return (
+        <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', mt: 3 }}>
+            <Paper elevation={3} sx={{ p: 3, mb: 3, width: '100%' }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2, borderBottom: '1px solid #ccc', pb: 1 }}>
+                    Add Book
+                </Typography>
+                <form onSubmit={handleSubmit}>
+                    <TextField
+                        label="Title"
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        required
+                        error={!!errors.title}
+                        helperText={errors.title}
+                    />
+                    <TextField
+                        label="Author"
+                        type="text"
+                        value={author}
+                        onChange={(e) => setAuthor(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        required
+                        error={!!errors.author}
+                        helperText={errors.author}
+                    />
+                    <TextField
+                        label="Subject"
+                        type="text"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        required
+                        error={!!errors.subject}
+                        helperText={errors.subject}
+                    />
+                    <TextField
+                        label="ISBN"
+                        type="text"
+                        value={isbn}
+                        onChange={(e) => setIsbn(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        required
+                        error={!!errors.isbn}
+                        helperText={errors.isbn}
+                    />
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        disabled={formLoading}
+                        sx={{
+                            backgroundColor: formLoading ? 'grey.500' : 'primary.main',
+                            cursor: formLoading ? 'not-allowed' : 'pointer',
+                            mt: 2,
+                        }}
+                    >
+                        {formLoading ? 'Loading...' : 'Add Book'}
+                    </Button>
+                    {responseError && <Typography color="error" sx={{ mt: 2 }}>{responseError}</Typography>}
+                    {success && <Typography color="success" sx={{ mt: 2 }}>{success}</Typography>}
+                </form>
+            </Paper>
+        </Container>
     );
 };
 

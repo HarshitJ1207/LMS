@@ -1,105 +1,187 @@
-import React, { useState, useEffect } from 'react';
-import LoadingComponent from '../components/extras/LoadingComponent';
-import { useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import ErrorComponent from './extras/ErrorComponent';
-function BookTable({ query, setQuery, loading, setLoading, setFormValues }) {   
-    const navigator = useNavigate();
-    const [bookList, setBookList] = useState([]);
-    const {isLoggedIn} = useContext(AuthContext);
-    const [error , setError] = useState(null);
-    useEffect(() => {
-        setLoading(true);   
-        setError(null);
-        setBookList([]);
-        const fetchBooks = async () => {
-            try {
-                const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/books?page=${query.page}&searchType=${query.searchType}&searchValue=${query.searchValue}&subject=${query.subject}`);
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => {
-                        throw new Error('Network response was not ok');
-                    });
-                    throw new Error(errorData.error || 'Network response was not ok');
-                }
-                const data = await response.json();
-                setBookList(data.bookList);
-            } catch (err) {
-                setError(err);
-            }finally {
-                setLoading(false);
-            }
-        };
-        fetchBooks();
-    }, [query ,setLoading]);
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import {
+	Paper,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
+	Typography,
+	Button,
+	Box,
+} from "@mui/material";
+import LoadingComponent from "../components/extras/LoadingComponent";
+import ErrorComponent from "./extras/ErrorComponent";
 
-    const idClickHandler = (event) => {
-        if(isLoggedIn === 'Admin') {
-            const bookID = event.target.innerHTML;
-            navigator(`/admin/book/${bookID}`);
-        }
-    };
+function BookTable({ query, setQuery, loading, setLoading, setFormValues }) {
+	const navigate = useNavigate();
+	const [bookList, setBookList] = useState([]);
+	const { isLoggedIn } = useContext(AuthContext);
+	const [error, setError] = useState(null);
 
-    if(error) {
-        <ErrorComponent error={error}/>
-    }
+	useEffect(() => {
+		setLoading(true);
+		setError(null);
+		setBookList([]);
+		const fetchBooks = async () => {
+			try {
+				const response = await fetch(
+					`${process.env.REACT_APP_API_BASE_URL}/books?page=${query.page}&searchType=${query.searchType}&searchValue=${query.searchValue}&subject=${query.subject}`
+				);
+				if (!response.ok) {
+					const errorData = await response.json().catch(() => {
+						throw new Error("Network response was not ok");
+					});
+					throw new Error(
+						errorData.error || "Network response was not ok"
+					);
+				}
+				const data = await response.json();
+				setBookList(data.bookList);
+			} catch (err) {
+				setError(err);
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchBooks();
+	}, [query, setLoading]);
 
-    if (loading) {
-        return (
-            <LoadingComponent/>
-        );
-    }
+	const idClickHandler = (bookID) => {
+		if (isLoggedIn === "Admin") {
+			navigate(`/admin/book/${bookID}`);
+		}
+	};
 
-    else if(bookList.length === 0) {
-        return (
-            <div className="shadow-md m-3 border h-auto p-4 rounded-lg bg-white">
-                <h1 className="text-center text-2xl font-bold text-gray-500">No Books Found</h1>
-            </div>
-        );
-    }
+	if (error) {
+		return <ErrorComponent error={error} />;
+	}
 
-    else return (
-        <div className="shadow-md m-3 border h-auto p-4 rounded-lg bg-white">
-            <table className="min-w-full divide-y divide-gray-800">
-                <thead className="bg-gray-200">
-                    <tr>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Availability</th>
-                    </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                    {bookList.map((book, index) => (
-                        <tr key={book.bookID}>
-                            <td className="px-6 py-4 whitespace-nowrap" onClick={idClickHandler}>{book.bookID}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{book.details.title}</td>
-                            <td className="px-6 py-4 whitespace-nowrap" onClick={() => {
-                                setQuery({searchType: 'author', searchValue: book.details.author , subject: '', page: 1})
-                                setFormValues({searchType: 'author', searchValue: book.details.author , subject: ''})
-                                
-                            }}>
-                                {book.details.author}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap" onClick={() => {
-                                setQuery({searchType: 'title', searchValue: '', subject: book.details.subject , page: 1})
-                                setFormValues({searchType: 'title', searchValue: '',  subject: book.details.subject})
-                                
-                            }}>
-                                {book.details.subject}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">{book.availability ? 'Available' : 'Unavailable'}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-            <div className='flex justify-center'>
-                <button onClick={() => setQuery(query => ({...query , page: query.page - 1}))} hidden={query.page === 1} className="m-2 p-2 bg-blue-500 text-white rounded-md">Previous</button>
-                <button onClick={() => setQuery(query => ({...query , page: query.page + 1}))} className="m-2 p-2 bg-blue-500 text-white rounded-md">Next</button>
-            </div>
-        </div>
-    );
+	if (loading) {
+		return <LoadingComponent />;
+	}
+
+	if (bookList.length === 0) {
+		return (
+			<Paper elevation={3} sx={{ m: 3, p: 4 }}>
+				<Typography variant="h4" align="center" color="text.secondary">
+					No Books Found
+				</Typography>
+			</Paper>
+		);
+	}
+
+	return (
+		<Paper elevation={3} sx={{ m: 3, p: 4 }}>
+			<TableContainer>
+				<Table>
+					<TableHead>
+						<TableRow>
+							<TableCell align="center">ID</TableCell>
+							<TableCell align="center">Title</TableCell>
+							<TableCell align="center">Author</TableCell>
+							<TableCell align="center">Subject</TableCell>
+							<TableCell align="center">Availability</TableCell>
+						</TableRow>
+					</TableHead>
+					<TableBody>
+						{bookList.map((book) => (
+							<TableRow key={book.bookID}>
+								<TableCell
+									align="center"
+									onClick={() => idClickHandler(book.bookID)}
+									sx={{
+										cursor:
+											isLoggedIn === "Admin"
+												? "pointer"
+												: "default",
+									}}
+								>
+									{book.bookID}
+								</TableCell>
+								<TableCell align="center">
+									{book.details.title}
+								</TableCell>
+								<TableCell
+									align="center"
+									onClick={() => {
+										setQuery({
+											searchType: "author",
+											searchValue: book.details.author,
+											subject: "",
+											page: 1,
+										});
+										setFormValues({
+											searchType: "author",
+											searchValue: book.details.author,
+											subject: "",
+										});
+									}}
+									sx={{ cursor: "pointer" }}
+								>
+									{book.details.author}
+								</TableCell>
+								<TableCell
+									align="center"
+									onClick={() => {
+										setQuery({
+											searchType: "title",
+											searchValue: "",
+											subject: book.details.subject,
+											page: 1,
+										});
+										setFormValues({
+											searchType: "title",
+											searchValue: "",
+											subject: book.details.subject,
+										});
+									}}
+									sx={{ cursor: "pointer" }}
+								>
+									{book.details.subject}
+								</TableCell>
+								<TableCell align="center">
+									{book.availability
+										? "Available"
+										: "Unavailable"}
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</TableContainer>
+			<Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+				<Button
+					onClick={() =>
+						setQuery((query) => ({
+							...query,
+							page: query.page - 1,
+						}))
+					}
+					disabled={query.page === 1}
+					sx={{ m: 1 }}
+					variant="contained"
+				>
+					Previous
+				</Button>
+				<Button
+					onClick={() =>
+						setQuery((query) => ({
+							...query,
+							page: query.page + 1,
+						}))
+					}
+					sx={{ m: 1 }}
+					variant="contained"
+				>
+					Next
+				</Button>
+			</Box>
+		</Paper>
+	);
 }
 
 export default BookTable;

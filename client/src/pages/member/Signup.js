@@ -1,5 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+    TextField,
+    Button,
+    Typography,
+    Paper
+} from "@mui/material";
 
 const SignupForm = () => {
     const navigate = useNavigate();
@@ -90,57 +96,77 @@ const SignupForm = () => {
 
     return (
         <React.Fragment>
-            <form onSubmit={submitHandler} className="flex flex-col items-center p-6 border border-gray-300 rounded bg-gray-50 w-5/6 mx-auto mt-5">
-                <input 
-                    name="username" 
-                    type="text" 
-                    placeholder="Username" 
-                    value={formData.username} 
-                    onChange={handleChange} 
-                    className="w-full max-w-xs mb-4 p-2 border border-gray-300 rounded" 
-                />
-                <input 
-                    name="password" 
-                    type="password" 
-                    placeholder="Password" 
-                    value={formData.password} 
-                    onChange={handleChange} 
-                    className="w-full max-w-xs mb-4 p-2 border border-gray-300 rounded" 
-                />
-                <input 
-                    name="confirmPassword" 
-                    type="password" 
-                    placeholder="Confirm Password" 
-                    value={formData.confirmPassword} 
-                    onChange={handleChange} 
-                    className="w-full max-w-xs mb-4 p-2 border border-gray-300 rounded" 
-                />
-                <input 
-                    name="contactNumber" 
-                    type="text" 
-                    placeholder="Contact Number" 
-                    value={formData.contactNumber} 
-                    onChange={handleChange} 
-                    className="w-full max-w-xs mb-4 p-2 border border-gray-300 rounded" 
-                />
-                <input 
-                    name="email" 
-                    type="email" 
-                    placeholder="Email Address" 
-                    value={formData.email} 
-                    onChange={handleChange} 
-                    className="w-full max-w-xs mb-4 p-2 border border-gray-300 rounded" 
-                />
-                {error && <div style={{ color: 'red' }}>{error}</div>}
-                <button 
-                    type="submit" 
-                    className="w-full max-w-xs p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                    disabled={formLoading}
-                >
-                    {formLoading ? 'Loading...' : 'Signup'}
-                </button>
-                {success && <div style={{ color: 'green' }}>{success}</div>}
-            </form>
+            <Paper elevation={3} sx={{ m: 3, p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '80%', maxWidth: 600, mx: 'auto', mt: 5 }}> 
+                <form onSubmit={submitHandler}>
+                    <TextField
+                        name="username"
+                        type="text"
+                        label="Username"
+                        value={formData.username}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        variant="outlined"
+                        sx={{ mb: 2 }} 
+                    />
+                    <TextField
+                        name="password"
+                        type="password"
+                        label="Password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        variant="outlined"
+                        sx={{ mb: 2 }} 
+                    />
+                    <TextField
+                        name="confirmPassword"
+                        type="password"
+                        label="Confirm Password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        variant="outlined"
+                        sx={{ mb: 2 }} 
+                    />
+                    <TextField
+                        name="contactNumber"
+                        type="text"
+                        label="Contact Number"
+                        value={formData.contactNumber}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        variant="outlined"
+                        sx={{ mb: 2 }} 
+                    />
+                    <TextField
+                        name="email"
+                        type="email"
+                        label="Email Address"
+                        value={formData.email}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        variant="outlined"
+                        sx={{ mb: 2 }} 
+                    />
+                    {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>} 
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        disabled={formLoading}
+                        sx={{ mb: 2 }} 
+                    >
+                        {formLoading ? 'Loading...' : 'Signup'}
+                    </Button>
+                    {success && <Typography color="success">{success}</Typography>} 
+                </form>
+            </Paper>
         </React.Fragment>
     );
 };

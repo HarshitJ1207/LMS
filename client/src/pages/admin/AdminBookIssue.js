@@ -1,4 +1,12 @@
 import React, { useState } from 'react';
+import {
+    Container,
+    Typography,
+    Paper,
+    TextField,
+    Button,
+    Box,
+} from '@mui/material';
 
 const AdminBookIssue = () => {
     const [username, setUsername] = useState('');
@@ -6,8 +14,7 @@ const AdminBookIssue = () => {
     const [userData, setUserData] = useState(null);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
-    const [formLoading , setFormLoading] = useState(false);
-
+    const [formLoading, setFormLoading] = useState(false);
 
     const handleBlur = async () => {
         setUserData(null);
@@ -16,7 +23,6 @@ const AdminBookIssue = () => {
         if (username) {
             try {
                 const url = `${process.env.REACT_APP_API_BASE_URL}/admin/users/${username}`;
-                console.log(url);
                 const response = await fetch(url, {
                     credentials: 'include'
                 });
@@ -29,7 +35,6 @@ const AdminBookIssue = () => {
                 const data = await response.json();
                 setUserData(data.user);
                 setError('');
-                console.log(data.user);
             } catch (err) {
                 setUserData(null);
                 setError(err.message);
@@ -40,7 +45,7 @@ const AdminBookIssue = () => {
     }
 
     const handleSubmit = async (e) => {
-        if(formLoading) return;
+        if (formLoading) return;
         e.preventDefault();
         setFormLoading(true);
         try {
@@ -66,59 +71,65 @@ const AdminBookIssue = () => {
         } catch (err) {
             setError(err.message);
             setSuccess(null);
-        } finally{
+        } finally {
             setFormLoading(false);
         }
     };
 
     return (
-        <div className="flex justify-center items-top mt-6">
-            <div className="w-full max-w-md bg-slate-200 shadow-lg rounded-lg p-6 mb-6">
-                <h2 className="text-2xl font-bold mb-4 border-b pb-2">Issue Book</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="mb-4">
-                        <label className="block text-lg font-semibold mb-2">Username</label>
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            onBlur={handleBlur}
-                            className="w-full p-2 border rounded"
-                            required
-                        />
-                    </div>
+        <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', mt: 3 }}>
+            <Paper elevation={3} sx={{ p: 3, mb: 3, width: '100%' }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2, borderBottom: '1px solid #ccc', pb: 1 }}>
+                    Issue Book
+                </Typography>
+                <form onSubmit={handleSubmit}>
+                    <TextField
+                        label="Username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        onBlur={handleBlur}
+                        fullWidth
+                        margin="normal"
+                        required
+                    />
+
                     {userData && (
-                        <div className="text-center">
-                            <div className="mb-4 bg-blue-900 text-white p-4 rounded-lg inline-block">
-                                <div className="text-center">
-                                    <p className="text-lg">Pending Fine: {userData.overdueFine}</p>
-                                    <p className="text-lg">Books Issued: {userData.currentIssues.length}</p>
-                                </div>
-                            </div>
-                        </div>
+                        <Box sx={{ backgroundColor: 'primary.dark', color: 'white', p: 2, borderRadius: '4px', mb: 2, textAlign: 'center' }}>
+                            <Typography>Pending Fine: {userData.overdueFine}</Typography>
+                            <Typography>Books Issued: {userData.currentIssues.length}</Typography>
+                        </Box>
                     )}
-                    <div className="mb-4">
-                        <label className="block text-lg font-semibold mb-2">Book ID</label>
-                        <input
-                            type="text"
-                            value={bookID}
-                            onChange={(e) => setBookID(e.target.value)}
-                            className="w-full p-2 border rounded"
-                            required
-                            />
-                    </div>
-                    {error && <p className="text-red-500">{error}</p>}
-                    {success && <p className="text-green-500">{success}</p>}
-                    <button
+
+                    <TextField
+                        label="Book ID"
+                        type="text"
+                        value={bookID}
+                        onChange={(e) => setBookID(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        required
+                    />
+
+                    {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
+                    {success && <Typography color="success" sx={{ mb: 2 }}>{success}</Typography>}
+
+                    <Button
                         type="submit"
+                        variant="contained"
+                        color="primary"
+                        fullWidth
                         disabled={formLoading}
-                        className={`p-2 rounded ${formLoading ? "bg-gray-500 cursor-not-allowed" : "bg-blue-500"} text-white`}
+                        sx={{
+                            backgroundColor: formLoading ? 'grey.500' : 'primary.main',
+                            cursor: formLoading ? 'not-allowed' : 'pointer',
+                        }}
                     >
                         {formLoading ? "Issuing..." : "Issue Book"}
-                    </button>
+                    </Button>
                 </form>
-            </div>
-        </div>
+            </Paper>
+        </Container>
     );
 };
 

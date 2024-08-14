@@ -74,7 +74,6 @@ function App() {
                     <Route path="/admin/book/:id" element={<PrivateRoute element={AdminBookDetail} />} />
                     <Route path="/admin/users" element={<PrivateRoute element={AdminUsers} />} />
                     <Route path="/admin/user/:id" element={<PrivateRoute element={AdminUserDetail} />} />
-                    <Route path="/admin/user/:id" element={<PrivateRoute element={AdminUserDetail} />} />
                     <Route path="/admin/bookIssue" element={<PrivateRoute element={AdminBookIssue} />} />
                     <Route path="/admin/bookReturn" element={<PrivateRoute element={AdminBookReturn} />} />
                     <Route path="/admin/addBook" element={<PrivateRoute element={AdminAddBook} />} />

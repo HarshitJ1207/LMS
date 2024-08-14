@@ -1,12 +1,28 @@
-import React from 'react';
-import loadingIcon from '../../assets/loading-icon.png';
+import React from "react";
+import { Box, Typography, CircularProgress } from "@mui/material";
+import { styled } from "@mui/system";
+
+const StyledBox = styled(Box)({
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "100vh",
+    backgroundColor: "#f5f5f5", // Hardcoded color
+});
+
+const StyledCircularProgress = styled(CircularProgress)({
+    marginBottom: "16px", // Hardcoded spacing
+});
 
 const LoadingPage = () => {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-            <img src={loadingIcon} alt="Loading" className="w-16 h-16 animate-spin mb-4" />
-            <h1 className="text-2xl font-semibold text-gray-700">Loading...</h1>
-        </div>
+        <StyledBox>
+            <StyledCircularProgress size={64} />
+            <Typography variant="h4" color="textSecondary" fontWeight="medium">
+                Loading...
+            </Typography>
+        </StyledBox>
     );
 };
 

@@ -1,128 +1,192 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import LoadingComponent from '../../components/extras/LoadingComponent';
-import ErrorComponent from '../../components/extras/ErrorComponent';
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import {
+	Container,
+	Paper,
+	Typography,
+	Grid,
+	Box,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
+} from "@mui/material";
+import { styled } from "@mui/system";
+import LoadingComponent from "../../components/extras/LoadingComponent";
+import ErrorComponent from "../../components/extras/ErrorComponent";
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+	backgroundColor: theme.palette.grey[200],
+	padding: theme.spacing(3),
+	marginBottom: theme.spacing(3),
+	borderRadius: theme.shape.borderRadius,
+	boxShadow: theme.shadows[3],
+}));
+
 const UserDetailsCard = ({ userDetails }) => {
-    return (
-        <div className="container mx-auto mt-3 bg-slate-200 shadow-md rounded-lg p-6 mb-6">
-            <h2 className="text-2xl font-bold mb-4 border-b pb-2">User Details</h2>
-            <div className="space-y-4">
-                <div className="flex flex-wrap -mx-2">
-                    <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-                        <span className="font-semibold text-lg w-32">Username:</span>
-                        <span className="text-lg">{userDetails.details.username}</span>
-                    </div>
-                    <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-                        <span className="font-semibold text-lg w-32">Email:</span>
-                        <span className="text-lg">{userDetails.details.email}</span>
-                    </div>
-                    <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-                        <span className="font-semibold text-lg w-32">Contact Number:</span>
-                        <span className="text-lg">{userDetails.details.contactNumber}</span>
-                    </div>
-                    <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-                        <span className="font-semibold text-lg w-32">User Type:</span>
-                        <span className="text-lg">{userDetails.details.userType}</span>
-                    </div>
-                    <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-                        <span className="font-semibold text-lg w-32">Max Books:</span>
-                        <span className="text-lg">{userDetails.bookIssuePrivilege.maxBooks}</span>
-                    </div>
-                    <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-                        <span className="font-semibold text-lg w-32">Issue Duration:</span>
-                        <span className="text-lg">{userDetails.bookIssuePrivilege.issueDuration} days</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+	return (
+		<StyledPaper>
+			<Typography
+				variant="h4"
+				component="h2"
+				gutterBottom
+				sx={{ pb: 1, borderBottom: 1, borderColor: "divider" }}
+			>
+				User Details
+			</Typography>
+			<Grid container spacing={2}>
+				{[
+					{ label: "Username:", value: userDetails.details.username },
+					{ label: "Email:", value: userDetails.details.email },
+					{
+						label: "Contact Number:",
+						value: userDetails.details.contactNumber,
+					},
+					{
+						label: "User Type:",
+						value: userDetails.details.userType,
+					},
+					{
+						label: "Max Books:",
+						value: userDetails.bookIssuePrivilege.maxBooks,
+					},
+					{
+						label: "Issue Duration:",
+						value: `${userDetails.bookIssuePrivilege.issueDuration} days`,
+					},
+				].map((item, index) => (
+					<Grid item xs={12} sm={6} lg={4} key={index}>
+						<Box display="flex" alignItems="center">
+							<Typography
+								variant="subtitle1"
+								fontWeight="medium"
+								sx={{ width: 160 }}
+							>
+								{item.label}
+							</Typography>
+							<Typography variant="body1">
+								{item.value}
+							</Typography>
+						</Box>
+					</Grid>
+				))}
+			</Grid>
+		</StyledPaper>
+	);
 };
 
 const IssueHistoryCard = ({ issues, title }) => {
-    return (
-        <div className="container mx-auto bg-slate-200 shadow-md rounded-lg p-6 mt-3 mb-6">
-            <h2 className="text-xl font-semibold mb-4">{title}</h2>
-            {issues.length === 0 ? (
-                <p>No current issues.</p>
-            ) : (
-                <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white text-center">
-                        <thead>
-                            <tr>
-                                <th className="py-2 px-4 border-b">Book ID</th>
-                                <th className="py-2 px-4 border-b">Issue Date</th>
-                                <th className="py-2 px-4 border-b">Return Date</th>
-                                <th className="py-2 px-4 border-b">Days Overdue</th>
-                                <th className="py-2 px-4 border-b">Fine</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {issues.map((issue, index) => {
-                                return (
-                                    <tr key = {index}>
-                                        <td className="py-2 px-4 border-b">{issue.bookID.bookID}</td>
-                                        <td className="py-2 px-4 border-b">{new Date(issue.issueDate).toLocaleDateString()}</td>
-                                        <td className="py-2 px-4 border-b">{new Date(issue.dateofReturn || issue.returnDate).toLocaleDateString()}</td>
-                                        <td className="py-2 px-4 border-b">{issue.daysOverdue}</td>
-                                        <td className="py-2 px-4 border-b">{issue.fine}</td>
-                                    </tr>
-                                )
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-        </div>
-    );
+	return (
+		<StyledPaper>
+			<Typography variant="h5" gutterBottom>
+				{title}
+			</Typography>
+			{issues.length === 0 ? (
+				<Typography>No current issues.</Typography>
+			) : (
+				<TableContainer component={Paper}>
+					<Table size="small">
+						<TableHead>
+							<TableRow>
+								<TableCell align="center">Book ID</TableCell>
+								<TableCell align="center">Issue Date</TableCell>
+								<TableCell align="center">
+									Return Date
+								</TableCell>
+								<TableCell align="center">
+									Days Overdue
+								</TableCell>
+								<TableCell align="center">Fine</TableCell>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{issues.map((issue, index) => (
+								<TableRow key={index}>
+									<TableCell align="center">
+										{issue.bookID.bookID}
+									</TableCell>
+									<TableCell align="center">
+										{new Date(
+											issue.issueDate
+										).toLocaleDateString()}
+									</TableCell>
+									<TableCell align="center">
+										{new Date(
+											issue.dateofReturn ||
+												issue.returnDate
+										).toLocaleDateString()}
+									</TableCell>
+									<TableCell align="center">
+										{issue.daysOverdue}
+									</TableCell>
+									<TableCell align="center">
+										{issue.fine}
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</TableContainer>
+			)}
+		</StyledPaper>
+	);
 };
+
 const Me = () => {
-    const { id } = useParams();
-    const [loading, setLoading] = useState(true);
-    const [userDetails, setUserDetails] = useState(null);
-    const [error, setError] = useState(null);   
-    console.log(userDetails);
+	const { id } = useParams();
+	const [loading, setLoading] = useState(true);
+	const [userDetails, setUserDetails] = useState(null);
+	const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchUserDetails = async () => {
-            try {
-                const url = `${process.env.REACT_APP_API_BASE_URL}/me`;
-                console.log(url);
-                const response = await fetch(url, {
-                    credentials: 'include'
-                });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => {
-                        throw new Error('Network response was not ok');
-                    });
-                    throw new Error(errorData.error || 'Network response was not ok');
-                }
-                const data = await response.json();
-                setUserDetails(data.user);
-                console.log(data.user);
-            } catch (error) {
-                setError(error);
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchUserDetails();
-    }, [id]);
+	useEffect(() => {
+		const fetchUserDetails = async () => {
+			try {
+				const url = `${process.env.REACT_APP_API_BASE_URL}/me`;
+				const response = await fetch(url, {
+					credentials: "include",
+				});
+				if (!response.ok) {
+					const errorData = await response.json().catch(() => {
+						throw new Error("Network response was not ok");
+					});
+					throw new Error(
+						errorData.error || "Network response was not ok"
+					);
+				}
+				const data = await response.json();
+				setUserDetails(data.user);
+			} catch (error) {
+				setError(error);
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchUserDetails();
+	}, [id]);
 
-    if (error) {
-        return <ErrorComponent error={error} />;
-    }
+	if (error) {
+		return <ErrorComponent error={error} />;
+	}
 
-    if (loading) {
-        return <LoadingComponent />;
-    }
+	if (loading) {
+		return <LoadingComponent />;
+	}
 
-    return (
-        <div className="container mx-auto p-4">
-            <UserDetailsCard userDetails={userDetails} />
-            <IssueHistoryCard issues = {userDetails.currentIssues} title = {'Current Issues'} />
-            <IssueHistoryCard issues = {userDetails.issueHistory} title = {'Past Issues'} />
-        </div>
-    );
+	return (
+		<Container maxWidth="lg" sx={{ py: 4 }}>
+			<UserDetailsCard userDetails={userDetails} />
+			<IssueHistoryCard
+				issues={userDetails.currentIssues}
+				title={"Current Issues"}
+			/>
+			<IssueHistoryCard
+				issues={userDetails.issueHistory}
+				title={"Past Issues"}
+			/>
+		</Container>
+	);
 };
 
 export default Me;

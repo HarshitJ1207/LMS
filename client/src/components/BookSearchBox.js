@@ -1,119 +1,172 @@
-import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext'; 
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import {
+    Box,
+    Select,
+    MenuItem,
+    TextField,
+    Button,
+    IconButton,
+    Menu,
+    Paper,
+    useTheme,
+} from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
-function BookSearchBox({ query, setQuery, setLoading, formValues, setFormValues }) {
+function BookSearchBox({
+    query,
+    setQuery,
+    setLoading,
+    formValues,
+    setFormValues,
+}) {
     const navigate = useNavigate();
-    const { isLoggedIn } = useContext(AuthContext); 
-    console.log('render query', query);
-    console.log('formValues', formValues);
-    const [dropdownVisible, setDropdownVisible] = useState(false);
-    console.log(isLoggedIn);
+    const { isLoggedIn } = useContext(AuthContext);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const theme = useTheme();
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormValues({
             ...formValues,
-            [name]: value
+            [name]: value,
         });
     };
 
     const onSubmit = (e) => {
         e.preventDefault();
-        console.log('submit', formValues);
         setQuery({ ...formValues, page: 1 });
         setLoading(true);
     };
 
     const handleReset = () => {
         setFormValues({
-            searchType: 'title',
-            subject: '',
-            searchValue: ''
+            searchType: "title",
+            subject: "",
+            searchValue: "",
         });
-        setQuery({ page: 1, searchType: 'title', searchValue: '', subject: '' });
+        setQuery({
+            page: 1,
+            searchType: "title",
+            searchValue: "",
+            subject: "",
+        });
         setLoading(true);
     };
 
-    const toggleDropdown = () => {
-        setDropdownVisible(!dropdownVisible);
+    const handleMenuOpen = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
     };
 
     const handleAddBook = () => {
-        navigate('/admin/addBook');
+        navigate("/admin/addBook");
+        handleMenuClose();
     };
 
     const handleRemoveBook = () => {
-        navigate('/admin/removeBook');
+        navigate("/admin/removeBook");
+        handleMenuClose();
     };
 
     return (
-        <div className="relative shadow-md m-3 border h-auto p-4 rounded-lg bg-white">
-            <form onSubmit={onSubmit} className="flex flex-row items-center justify-center w-full flex-wrap">
-                <select
+        <Paper
+            elevation={3}
+            sx={{
+                m: 3,
+                p: 4,
+                backgroundColor: theme.palette.background.paper,
+                color: theme.palette.text.primary,
+            }}
+        >
+            <Box
+                component="form"
+                onSubmit={onSubmit}
+                sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}
+            >
+                <Select
                     name="searchType"
                     value={formValues.searchType}
                     onChange={handleChange}
-                    className="mx-2 border-2 p-2 shadow-sm rounded-md"
+                    sx={{
+                        m: 1,
+                        minWidth: 120,
+                        color: theme.palette.text.primary,
+                    }}
                 >
-                    <option value="title">Title</option>
-                    <option value="author">Author</option>
-                    <option value="ISBN">ISBN</option>
-                </select>
-                <input
+                    <MenuItem value="title">Title</MenuItem>
+                    <MenuItem value="author">Author</MenuItem>
+                    <MenuItem value="ISBN">ISBN</MenuItem>
+                </Select>
+                <TextField
                     name="subject"
                     placeholder="Subject"
                     value={formValues.subject}
                     onChange={handleChange}
-                    className="mx-2 border-2 p-2 shadow-sm rounded-md"
+                    sx={{
+                        m: 1,
+                        color: theme.palette.text.primary,
+                    }}
                 />
-                <input
+                <TextField
                     name="searchValue"
                     placeholder="Search Value"
                     value={formValues.searchValue}
                     onChange={handleChange}
-                    className="mx-2 border-2 p-2 shadow-sm rounded-md"
+                    sx={{
+                        m: 1,
+                        color: theme.palette.text.primary,
+                    }}
                 />
-                <button
-                    className="search-button mx-2 border-2 p-2 shadow-sm rounded-md bg-blue-500 text-white hover:bg-blue-600"
+                <Button
                     type="submit"
+                    variant="contained"
+                    color="primary"
+                    sx={{ m: 1 }}
                 >
                     Search
-                </button>
-                <button
-                    className="search-button mx-2 border-2 p-2 shadow-sm rounded-md bg-blue-500 text-white hover:bg-blue-600"
-                    type="button"
+                </Button>
+                <Button
                     onClick={handleReset}
+                    variant="contained"
+                    color="secondary"
+                    sx={{ m: 1 }}
                 >
                     Reset
-                </button>
-                {isLoggedIn === 'Admin' && (
-                    <div className="relative ml-4">
-                        <button
-                            className="flex items-center justify-center w-8 h-8 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300"
-                            onClick={toggleDropdown} type="button"
+                </Button>
+                {isLoggedIn === "Admin" && (
+                    <>
+                        <IconButton
+                            onClick={handleMenuOpen}
+                            sx={{ ml: 2, color: theme.palette.text.primary }}
                         >
-                            &#x22EE;
-                        </button>
-                        {dropdownVisible && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg">
-                                <button
-                                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                                    onClick={handleAddBook} type="button"
-                                >
-                                    Add Book
-                                </button>
-                                <button
-                                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                                    onClick={handleRemoveBook} type="button"
-                                >
-                                    Remove Book
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                            <MoreVertIcon />
+                        </IconButton>
+                        <Menu
+                            anchorEl={anchorEl}
+                            open={Boolean(anchorEl)}
+                            onClose={handleMenuClose}
+                        >
+                            <MenuItem onClick={handleAddBook}>
+                                Add Book
+                            </MenuItem>
+                            <MenuItem onClick={handleRemoveBook}>
+                                Remove Book
+                            </MenuItem>
+                        </Menu>
+                    </>
                 )}
-            </form>
-        </div>
+            </Box>
+        </Paper>
     );
 }
 

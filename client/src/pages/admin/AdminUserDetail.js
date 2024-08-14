@@ -1,108 +1,146 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import LoadingComponent from '../../components/extras/LoadingComponent';
-import ErrorComponent from '../../components/extras/ErrorComponent';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+	Container,
+	Paper,
+	Typography,
+	Grid,
+	Box,
+	Button,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
+} from "@mui/material";
+import { styled } from "@mui/system";
+import LoadingComponent from "../../components/extras/LoadingComponent";
+import ErrorComponent from "../../components/extras/ErrorComponent";
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+	backgroundColor: theme.palette.grey[200],
+	padding: theme.spacing(3),
+	marginBottom: theme.spacing(3),
+	borderRadius: theme.shape.borderRadius,
+	boxShadow: theme.shadows[3],
+}));
+
 const UserDetailsCard = ({ userDetails, onRemoveUser }) => {
 	return (
-		<div className="container mx-auto mt-3 bg-slate-200 shadow-md rounded-lg p-6 mb-6">
-			<h2 className="text-2xl font-bold mb-4 border-b pb-2">User Details</h2>
-			<div className="space-y-4">
-				<div className="flex flex-wrap -mx-2">
-					<div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-						<span className="font-semibold text-lg w-32">Username:</span>
-						<span className="text-lg">{userDetails.details.username}</span>
-					</div>
-					<div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-						<span className="font-semibold text-lg w-32">Email:</span>
-						<span className="text-lg">{userDetails.details.email}</span>
-					</div>
-					<div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-						<span className="font-semibold text-lg w-32">Contact Number:</span>
-						<span className="text-lg">{userDetails.details.contactNumber}</span>
-					</div>
-					<div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-						<span className="font-semibold text-lg w-32">User Type:</span>
-						<span className="text-lg">{userDetails.details.userType}</span>
-					</div>
-					<div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-						<span className="font-semibold text-lg w-32">Max Books:</span>
-						<span className="text-lg">{userDetails.bookIssuePrivilege.maxBooks}</span>
-					</div>
-					<div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-						<span className="font-semibold text-lg w-32">Issue Duration:</span>
-						<span className="text-lg">{userDetails.bookIssuePrivilege.issueDuration} days</span>
-					</div>
-					<div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 flex items-center">
-						<span className="font-semibold text-lg w-32">Overdue Fine:</span>
-						<span className="text-lg">{userDetails.overdueFine}</span>
-					</div>
-				</div>
-				<button 
-					onClick={onRemoveUser} 
-					className="mt-4 bg-red-500 text-white py-2 px-4 rounded"
-				>
-					Remove User
-				</button>
-			</div>
-		</div>
+		<StyledPaper>
+			<Typography
+				variant="h4"
+				component="h2"
+				gutterBottom
+				sx={{ pb: 1, borderBottom: 1, borderColor: "divider" }}
+			>
+				User Details
+			</Typography>
+			<Grid container spacing={2}>
+				{[
+					{ label: "Username:", value: userDetails.details.username },
+					{ label: "Email:", value: userDetails.details.email },
+					{
+						label: "Contact Number:",
+						value: userDetails.details.contactNumber,
+					},
+					{
+						label: "User Type:",
+						value: userDetails.details.userType,
+					},
+					{
+						label: "Max Books:",
+						value: userDetails.bookIssuePrivilege.maxBooks,
+					},
+					{
+						label: "Issue Duration:",
+						value: `${userDetails.bookIssuePrivilege.issueDuration} days`,
+					},
+					{ label: "Overdue Fine:", value: userDetails.overdueFine },
+				].map((item, index) => (
+					<Grid item xs={12} sm={6} lg={4} key={index}>
+						<Box display="flex" alignItems="center">
+							<Typography
+								variant="subtitle1"
+								fontWeight="medium"
+								sx={{ width: 160 }}
+							>
+								{item.label}
+							</Typography>
+							<Typography variant="body1">
+								{item.value}
+							</Typography>
+						</Box>
+					</Grid>
+				))}
+			</Grid>
+			<Button
+				variant="contained"
+				color="error"
+				onClick={onRemoveUser}
+				sx={{ mt: 2 }}
+			>
+				Remove User
+			</Button>
+		</StyledPaper>
 	);
 };
 
 const IssueHistoryCard = ({ issues, title }) => {
 	return (
-		<div className="container mx-auto bg-slate-200 shadow-md rounded-lg p-6 mt-3 mb-6">
-			<h2 className="text-xl font-semibold mb-4">{title}</h2>
+		<StyledPaper>
+			<Typography variant="h5" gutterBottom>
+				{title}
+			</Typography>
 			{issues.length === 0 ? (
-				<p>No current issues.</p>
+				<Typography>No current issues.</Typography>
 			) : (
-				<div className="overflow-x-auto">
-					<table className="min-w-full bg-white text-center">
-						<thead>
-							<tr>
-								<th className="py-2 px-4 border-b">Book ID</th>
-								<th className="py-2 px-4 border-b">
-									Issue Date
-								</th>
-								<th className="py-2 px-4 border-b">
+				<TableContainer component={Paper}>
+					<Table size="small">
+						<TableHead>
+							<TableRow>
+								<TableCell align="center">Book ID</TableCell>
+								<TableCell align="center">Issue Date</TableCell>
+								<TableCell align="center">
 									Return Date
-								</th>
-								<th className="py-2 px-4 border-b">
+								</TableCell>
+								<TableCell align="center">
 									Days Overdue
-								</th>
-								<th className="py-2 px-4 border-b">Fine</th>
-							</tr>
-						</thead>
-						<tbody>
-							{issues.map((issue) => {
-								return (
-									<tr >
-										<td className="py-2 px-4 border-b">
-											{issue.bookID.bookID}
-										</td>
-										<td className="py-2 px-4 border-b">
-											{new Date(
-												issue.issueDate
-											).toLocaleDateString()}
-										</td>
-										<td className="py-2 px-4 border-b">
-											{new Date(
-												issue.dateofReturn || issue.returnDate
-											).toLocaleDateString()}
-										</td>
-										<td className="py-2 px-4 border-b">
-											{issue.daysOverdue}
-										</td>
-										<td className="py-2 px-4 border-b">
-											{issue.fine}
-										</td>
-									</tr>
-								);
-							})}
-						</tbody>
-					</table>
-				</div>
+								</TableCell>
+								<TableCell align="center">Fine</TableCell>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{issues.map((issue, index) => (
+								<TableRow key={index}>
+									<TableCell align="center">
+										{issue.bookID.bookID}
+									</TableCell>
+									<TableCell align="center">
+										{new Date(
+											issue.issueDate
+										).toLocaleDateString()}
+									</TableCell>
+									<TableCell align="center">
+										{new Date(
+											issue.dateofReturn ||
+												issue.returnDate
+										).toLocaleDateString()}
+									</TableCell>
+									<TableCell align="center">
+										{issue.daysOverdue}
+									</TableCell>
+									<TableCell align="center">
+										{issue.fine}
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</TableContainer>
 			)}
-		</div>
+		</StyledPaper>
 	);
 };
 
@@ -111,31 +149,31 @@ const AdminUserDetail = () => {
 	const navigate = useNavigate();
 	const [loading, setLoading] = useState(true);
 	const [userDetails, setUserDetails] = useState(null);
-	const [error, setError] = useState(null);   
+	const [error, setError] = useState(null);
 
 	useEffect(() => {
 		const fetchUserDetails = async () => {
 			try {
 				const url = `${process.env.REACT_APP_API_BASE_URL}/admin/users/${id}`;
-				console.log(url);
 				const response = await fetch(url, {
-					credentials: 'include'
+					credentials: "include",
 				});
 				if (!response.ok) {
 					const errorData = await response.json().catch(() => {
-						throw new Error('Network response was not ok');
+						throw new Error("Network response was not ok");
 					});
-					throw new Error(errorData.error || 'Network response was not ok');
+					throw new Error(
+						errorData.error || "Network response was not ok"
+					);
 				}
 				const data = await response.json();
 				setUserDetails(data.user);
-				console.log(data.user);
 			} catch (error) {
 				setError(error);
 			} finally {
 				setLoading(false);
 			}
-		}
+		};
 		fetchUserDetails();
 	}, [id]);
 
@@ -148,13 +186,13 @@ const AdminUserDetail = () => {
 					headers: {
 						"Content-Type": "application/json",
 					},
-					credentials: 'include',
+					credentials: "include",
 				}
 			);
 			if (!response.ok) {
-				throw new Error('Failed to remove user');
+				throw new Error("Failed to remove user");
 			}
-			navigate('/admin/users');
+			navigate("/admin/users");
 		} catch (error) {
 			setError(error);
 		}
@@ -169,11 +207,20 @@ const AdminUserDetail = () => {
 	}
 
 	return (
-		<div className="container mx-auto p-4">
-			<UserDetailsCard userDetails={userDetails} onRemoveUser={handleRemoveUser} />
-			<IssueHistoryCard issues={userDetails.currentIssues} title={'Current Issues'} />
-			<IssueHistoryCard issues={userDetails.issueHistory} title={'Past Issues'} />
-		</div>
+		<Container maxWidth="lg" sx={{ py: 4 }}>
+			<UserDetailsCard
+				userDetails={userDetails}
+				onRemoveUser={handleRemoveUser}
+			/>
+			<IssueHistoryCard
+				issues={userDetails.currentIssues}
+				title={"Current Issues"}
+			/>
+			<IssueHistoryCard
+				issues={userDetails.issueHistory}
+				title={"Past Issues"}
+			/>
+		</Container>
 	);
 };
 
