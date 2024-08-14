@@ -13,7 +13,6 @@ import PrivateRoute from './components/PrivateRoute';
 import Signout from './components/Signout';
 import AdminBookIssue from './pages/admin/AdminBookIssue';
 import AdminBookReturn from './pages/admin/AdminBookReturn';
-import Test from './pages/Test';
 import { AuthContext } from './context/AuthContext'; 
 import LoadingComponent from './components/extras/LoadingComponent';
 import NavigationBar from './components/NavigationBar';
@@ -22,7 +21,7 @@ import AdminRemoveBook from './pages/admin/AdminRemoveBook';
 import AdminAddUser from './pages/admin/AdminAddUser';
 import AdminRemoveUser from './pages/admin/AdminRemoveUser';
 import Me from './pages/member/Me';
-import PageNotFound from './pages/PageNotFound'; // Import the PageNotFound component
+import PageNotFound from './pages/PageNotFound';
 
 function App() {
     const { login } = useContext(AuthContext);
@@ -61,7 +60,6 @@ function App() {
             <Router>
                 <NavigationBar/>
                 <Routes>
-                    <Route path="/Test" element={<Test />} />
                     <Route path="/" element={<Home />} />
                     <Route path="/me" element={<Me />} />
                     <Route path="/books" element={<Books />} />

@@ -79,47 +79,47 @@ function NavigationBar() {
             <List>
                 {isLoggedIn === "Admin" ? (
                     <>
-                        <ListItem button component={RouterLink} to="/admin">
+                        <ListItem component={RouterLink} to="/admin">
                             <ListItemText primary="Home" />
                         </ListItem>
-                        <ListItem button component={RouterLink} to="/admin/Books">
+                        <ListItem component={RouterLink} to="/admin/Books">
                             <ListItemText primary="Books" />
                         </ListItem>
-                        <ListItem button component={RouterLink} to="/admin/Users">
+                        <ListItem component={RouterLink} to="/admin/Users">
                             <ListItemText primary="Users" />
                         </ListItem>
-                        <ListItem button component={RouterLink} to="/admin/BookIssue">
+                        <ListItem component={RouterLink} to="/admin/BookIssue">
                             <ListItemText primary="Book Issue" />
                         </ListItem>
-                        <ListItem button component={RouterLink} to="/admin/BookReturn">
+                        <ListItem component={RouterLink} to="/admin/BookReturn">
                             <ListItemText primary="Book Return" />
                         </ListItem>
                     </>
                 ) : (
                     <>
-                        <ListItem button component={RouterLink} to="/">
+                        <ListItem component={RouterLink} to="/">
                             <ListItemText primary="Home" />
                         </ListItem>
-                        <ListItem button component={RouterLink} to="/Books">
+                        <ListItem component={RouterLink} to="/Books">
                             <ListItemText primary="Books" />
                         </ListItem>
                         {isLoggedIn && (
-                            <ListItem button component={RouterLink} to="/Me">
+                            <ListItem component={RouterLink} to="/Me">
                                 <ListItemText primary="Me" />
                             </ListItem>
                         )}
                     </>
                 )}
                 {isLoggedIn ? (
-                    <ListItem button component={RouterLink} to="/Signout">
+                    <ListItem component={RouterLink} to="/Signout">
                         <ListItemText primary="Signout" />
                     </ListItem>
                 ) : (
                     <>
-                        <ListItem button component={RouterLink} to="/Signup">
+                        <ListItem component={RouterLink} to="/Signup">
                             <ListItemText primary="Signup" />
                         </ListItem>
-                        <ListItem button component={RouterLink} to="/Login">
+                        <ListItem component={RouterLink} to="/Login">
                             <ListItemText primary="Login" />
                         </ListItem>
                     </>

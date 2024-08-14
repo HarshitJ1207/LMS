@@ -1,11 +1,24 @@
 import React from "react";
+import { Box, Typography } from "@mui/material";
 
 const ErrorComponent = ({ error }) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return (
-        <div className="text-red-700 bg-red-100 p-4 border border-red-400 rounded-md my-2 w-5/12 m-auto">
-            <p>{errorMessage}</p>
-        </div>
+        <Box
+            sx={{
+                color: 'text.primary',
+                backgroundColor: 'error.light',
+                padding: 2,
+                border: 1,
+                borderColor: 'error.main',
+                borderRadius: 1,
+                marginY: 2,
+                width: '50%',
+                marginX: 'auto',
+            }}
+        >
+            <Typography>{errorMessage}</Typography>
+        </Box>
     );
 };
 
