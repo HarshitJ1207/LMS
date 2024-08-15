@@ -23,7 +23,7 @@ const AdminBookReturn = () => {
         if(!issueData){
             try {
                 const token = localStorage.getItem('token');
-                const url = `${process.env.REACT_APP_API_BASE_URL}/admin/issueData?bookID=${bookID}`;
+                const url = `${process.env.REACT_APP_API_BASE_URL}/admin/issueData?bookID=${bookID.trim()}`;
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: {
@@ -46,6 +46,7 @@ const AdminBookReturn = () => {
             }
         }
         else{
+            setIssueData(null);
             try {
                 const token = localStorage.getItem('token');
                 const url = `${process.env.REACT_APP_API_BASE_URL}/admin/bookReturn`;
@@ -55,7 +56,7 @@ const AdminBookReturn = () => {
                         'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`,
                     },
-                    body: JSON.stringify({ bookID })
+                    body: JSON.stringify({ bookID: bookID.trim() }),
                 });
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => {
@@ -89,6 +90,8 @@ const AdminBookReturn = () => {
                         fullWidth
                         margin="normal"
                         required
+                        error = {error ? true : false}
+                        helperText={error ? error.message : ''}
                     />
 
                     {issueData && (
@@ -98,8 +101,7 @@ const AdminBookReturn = () => {
                         </Box>
                     )}
 
-                    {error && <Typography color="error">{error.message}</Typography>}
-                    {success && <Typography color="success">{success}</Typography>}
+                    {success && <Typography color="success.main" >{success}</Typography>}
 
                     <Button
                         type="submit"

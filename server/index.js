@@ -8,6 +8,7 @@ const User = require('./models/user.js');
 const jwt = require('jsonwebtoken');
 const MONGODB_URI = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@cluster0.9ronrfd.mongodb.net/${process.env.MONGODB_DBNAME}?retryWrites=true&w=majority`;
 const app = express();
+const {logUserActivity} = require('./middleware/activeUsers.js');
 
 const corsOptions = {
     origin: process.env.CLIENT_URL,
@@ -25,23 +26,20 @@ app.use('/', async (req, res, next) => {
         if (token) {
             try {
                 const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-                req.user = await User.findOne({ 'details.username': decodedToken.username });
+                req.user = await User.findOne({ 'username': decodedToken.username });
             } catch (err) {
-                console.error('Token verification or user lookup failed:', err);
                 req.user = null;
             }
         }
     }
     next();
 });
-
-
+app.use(logUserActivity);
 app.use(bodyParser.json());  
 
 const memberApiRoutes = require('./routes/member-api.js');
 const adminApiRoutes = require('./routes/admin-api.js');
 
- 
 app.use('/api/admin',adminApiRoutes);
 app.use('/api',memberApiRoutes);
 app.use('*' , (req , res) => {
@@ -62,12 +60,14 @@ async function connectDB(){
         if(!root){
             root = await User.create({
                 admin: true, 
+                username: 'root',
+                password: 'root@123',
                 details: {
-                    username: 'root',
+                    firstName: 'root',
+                    lastName: 'root',
                     email: 'jain1207harshit@gmail.com',
                     contactNumber: '9406817091',
                     userType: 'Admin',
-                    password: 'root'
                 },
                 bookIssuePrivilege:{
                     maxBooks: 20,
@@ -75,6 +75,10 @@ async function connectDB(){
                 }
             });
             await root.save();
+            const stats = await dbs.findOne({});
+            stats.totalUsers++;
+            stats.recentActivities.push('New user added: root');
+            await stats.save();
         }
         app.listen(process.env.PORT || 8000);
         console.log("connection success");

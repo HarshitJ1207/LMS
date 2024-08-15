@@ -39,7 +39,8 @@ const UserDetailsCard = ({ userDetails, onRemoveUser }) => {
 			</Typography>
 			<Grid container spacing={2}>
 				{[
-					{ label: "Username:", value: userDetails.details.username },
+					{ label: "Username:", value: userDetails.username },
+					{ label: "Name:", value: userDetails.details.firstName + " " + userDetails.details.lastName },
 					{ label: "Email:", value: userDetails.details.email },
 					{
 						label: "Contact Number:",
@@ -154,6 +155,9 @@ const AdminUserDetail = () => {
 	useEffect(() => {
 		const fetchUserDetails = async () => {
 			try {
+				setLoading(true);
+				setError(null);
+				setUserDetails(null);
 				const url = `${process.env.REACT_APP_API_BASE_URL}/admin/users/${id}`;
 				const response = await fetch(url, {
 					headers: {

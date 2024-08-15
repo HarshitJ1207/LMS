@@ -114,7 +114,8 @@ function BookSearchBox({
                     onChange={handleChange}
                     sx={{
                         m: 1,
-                        color: theme.palette.text.primary,
+						width: "25ch",
+						color: theme.palette.text.primary,
                     }}
                 />
                 <TextField
@@ -123,8 +124,9 @@ function BookSearchBox({
                     value={formValues.searchValue}
                     onChange={handleChange}
                     sx={{
-                        m: 1,
-                        color: theme.palette.text.primary,
+						m: 1,
+						width: "25ch",
+						color: theme.palette.text.primary,
                     }}
                 />
                 <Button

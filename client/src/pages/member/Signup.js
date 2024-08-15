@@ -1,173 +1,193 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
+    Container,
+    Typography,
+    Paper,
     TextField,
     Button,
-    Typography,
-    Paper
-} from "@mui/material";
+} from '@mui/material';
 
 const SignupForm = () => {
-    const navigate = useNavigate();
-    const [formData, setFormData] = useState({
-        username: '',
-        password: '',
-        confirmPassword: '',
-        contactNumber: '',
-        email: ''
-    });
-    const [error, setError] = useState(null);
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [email, setEmail] = useState("");
+    const [contactNumber, setContactNumber] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [errors, setErrors] = useState({});
     const [formLoading, setFormLoading] = useState(false);
-    const [success, setSuccess] = useState(false);
+    const [success, setSuccess] = useState(null);
+    console.log(errors);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({
-            ...formData,
-            [name]: value
-        });
-    };
-
-    const validateForm = () => {
-        const { username, password, confirmPassword, contactNumber, email } = formData;
-        if (username.length < 4 || username.length > 12) {
-            return 'Username must be between 4 and 12 characters long';
+    const validate = () => {
+		const errors = {};
+        if(!firstName.trim()){
+            errors.firstName = "First name is required";
         }
-        if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,12}$/.test(password)) {
-            return 'Password must be alphanumeric, contain at least one letter and one number, and be between 4 and 12 characters long';
+        if(!lastName.trim()){
+            errors.lastName = "Last name is required";
         }
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!email) {
+			errors.email = "Email is required";
+		} else if (!emailRegex.test(email.trim().toLowerCase())) {
+			errors.email = "Email is not valid";
+		}
+		const contactNumberRegex = /^\d{10}$/;
+		if (!contactNumber) {
+			errors.contactNumber = "Contact number is required";
+		} else if (!contactNumberRegex.test(contactNumber.trim())) {
+			errors.contactNumber = "Contact number must be a 10-digit number";
+		}
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{4,12}$/;
+		if (!password) {
+			errors.password = "Password is required";
+		} else if (!passwordRegex.test(password)) {
+			errors.password =
+				"Password must contain at least one letter, one number, and be between 4 and 12 characters long";
+		}
         if (password !== confirmPassword) {
-            return 'Passwords must match';
+            errors.confirmPassword = "Passwords do not match";
         }
-        if (!/^\d{10}$/.test(contactNumber)) {
-            return 'Contact number must be 10 digits';
-        }
-        if (!/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/.test(email)) {
-            return 'Invalid email address';
-        }
-        return null;
-    };
+		return errors;
+	};
 
-    const submitHandler = (e) => {
-        if(formLoading) return;
-        e.preventDefault();
-        setError('');
+    const handleSubmit = async (e) => {
+        if (formLoading) return;
         setFormLoading(true);
-        setSuccess(false);
-        const validationError = validateForm();
-        if (validationError) {
-            setError(validationError);
+        setSuccess(null);
+        setErrors({});
+        e.preventDefault();
+        const validationErrors = validate();
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
             setFormLoading(false);
             return;
         }
-        const postData = async () => {
-            try {
-                const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/signup`, {
-                    method: 'POST',
+        try {
+            const response = await fetch(
+                `${process.env.REACT_APP_API_BASE_URL}/signup`,
+                {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+                        "Content-Type": "application/json",
                     },
-                    body: JSON.stringify(formData)
-                });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => {
-                        throw new Error('Network response was not ok');
-                    });
-                    throw new Error(errorData.error || 'Network response was not ok');
+                    body: JSON.stringify({
+                        firstName: firstName.trim(),
+                        lastName: lastName.trim(),
+                        email: email.toLowerCase().trim(),
+                        contactNumber: contactNumber.trim(),
+                        password,
+                        confirmPassword,
+                    }),
                 }
-                setFormData({
-                    username: '',
-                    password: '',
-                    confirmPassword: '',
-                    contactNumber: '',
-                    email: ''
+            );
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => {
+                    throw new Error(JSON.stringify({message: "Network response was not ok"}));
                 });
-                setSuccess('Signup successful');
-                navigate('/login');
-            } catch (error) {
-                setError(error.message);
-            } finally {
-                setFormLoading(false);
+                throw new Error(JSON.stringify(errorData.errors));
             }
-        };
-        postData();
+            const data = await response.json();
+            setSuccess(data.message);
+        } catch (error) {
+            setErrors(JSON.parse(error.message));  
+        } finally {
+            setFormLoading(false);
+        }
     };
-
     return (
-        <React.Fragment>
-            <Paper elevation={3} sx={{ m: 3, p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '80%', maxWidth: 600, mx: 'auto', mt: 5 }}> 
-                <form onSubmit={submitHandler}>
+        <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', mt: 3 }}>
+            <Paper elevation={3} sx={{ p: 3, mb: 3, width: '100%' }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2, borderBottom: '1px solid #ccc', pb: 1 }}>
+                    Add User
+                </Typography>
+                <form onSubmit={handleSubmit}>
                     <TextField
-                        name="username"
+                        label="First Name"
                         type="text"
-                        label="Username"
-                        value={formData.username}
-                        onChange={handleChange}
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
                         fullWidth
                         margin="normal"
-                        variant="outlined"
-                        sx={{ mb: 2 }} 
+                        required
+                        error={!!errors.firstName}
+                        helperText={errors.firstName}
                     />
                     <TextField
-                        name="password"
-                        type="password"
-                        label="Password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        fullWidth
-                        margin="normal"
-                        variant="outlined"
-                        sx={{ mb: 2 }} 
-                    />
-                    <TextField
-                        name="confirmPassword"
-                        type="password"
-                        label="Confirm Password"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        fullWidth
-                        margin="normal"
-                        variant="outlined"
-                        sx={{ mb: 2 }} 
-                    />
-                    <TextField
-                        name="contactNumber"
+                        label="Last Name"
                         type="text"
-                        label="Contact Number"
-                        value={formData.contactNumber}
-                        onChange={handleChange}
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
                         fullWidth
                         margin="normal"
-                        variant="outlined"
-                        sx={{ mb: 2 }} 
+                        required
+                        error={!!errors.lastName}
+                        helperText={errors.lastName}
                     />
                     <TextField
-                        name="email"
+                        label="Email"
                         type="email"
-                        label="Email Address"
-                        value={formData.email}
-                        onChange={handleChange}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         fullWidth
                         margin="normal"
-                        variant="outlined"
-                        sx={{ mb: 2 }} 
+                        required
+                        error={!!errors.email}
+                        helperText={errors.email}
                     />
-                    {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>} 
+                    <TextField
+                        label="Contact Number"
+                        type="text"
+                        value={contactNumber}
+                        onChange={(e) => setContactNumber(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        required
+                        error={!!errors.contactNumber}
+                        helperText={errors.contactNumber}
+                    />
+                    <TextField
+                        label="Password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        required
+                        error={!!errors.password}
+                        helperText={errors.password}
+                    />
+                    <TextField
+                        label="Confirm Password"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        required
+                        error={!!errors.confirmPassword}
+                        helperText={errors.confirmPassword}
+                    />
                     <Button
                         type="submit"
                         variant="contained"
                         color="primary"
                         fullWidth
                         disabled={formLoading}
-                        sx={{ mb: 2 }} 
+                        sx={{
+                            backgroundColor: formLoading ? 'grey.500' : 'primary.main',
+                            cursor: formLoading ? 'not-allowed' : 'pointer',
+                            mt: 2,
+                        }}
                     >
-                        {formLoading ? 'Loading...' : 'Signup'}
+                        {formLoading ? 'Adding User...' : 'Add User'}
                     </Button>
-                    {success && <Typography color="success">{success}</Typography>} 
+                    {success && <Typography color="success.main" sx={{ mt: 2 }}>{success}</Typography>}
+                    {errors.message && <Typography color="error.main" sx={{ mt: 2 }}>{errors.message}</Typography>}
                 </form>
             </Paper>
-        </React.Fragment>
+        </Container>
     );
 };
 

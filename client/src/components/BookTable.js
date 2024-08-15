@@ -21,6 +21,7 @@ function BookTable({ query, setQuery, loading, setLoading, setFormValues }) {
 	const [bookList, setBookList] = useState([]);
 	const { isLoggedIn } = useContext(AuthContext);
 	const [error, setError] = useState(null);
+	const [maxPage, setMaxPage] = useState(1);
 
 	useEffect(() => {
 		setLoading(true);
@@ -41,6 +42,7 @@ function BookTable({ query, setQuery, loading, setLoading, setFormValues }) {
 				}
 				const data = await response.json();
 				setBookList(data.bookList);
+				setMaxPage(data.maxPage);
 			} catch (err) {
 				setError(err);
 			} finally {
@@ -79,7 +81,7 @@ function BookTable({ query, setQuery, loading, setLoading, setFormValues }) {
 			<TableContainer>
 				<Table>
 					<TableHead>
-						<TableRow>
+						<TableRow sx = {{backgroundColor: '#f0f0f0'}}>
 							<TableCell align="center">ID</TableCell>
 							<TableCell align="center">Title</TableCell>
 							<TableCell align="center">Author</TableCell>
@@ -88,8 +90,11 @@ function BookTable({ query, setQuery, loading, setLoading, setFormValues }) {
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{bookList.map((book) => (
-							<TableRow key={book.bookID}>
+						{bookList.map((book, index) => (
+							<TableRow 
+								key={book.bookID}
+								sx={{ backgroundColor: index % 2 === 1 ? '#f0f0f0' : '#ffffff' }}
+							>
 								<TableCell
 									align="center"
 									onClick={() => idClickHandler(book.bookID)}
@@ -138,6 +143,7 @@ function BookTable({ query, setQuery, loading, setLoading, setFormValues }) {
 											searchValue: "",
 											subject: book.details.subject,
 										});
+										setLoading(true);
 									}}
 									sx={{ cursor: "pointer" }}
 								>
@@ -174,6 +180,7 @@ function BookTable({ query, setQuery, loading, setLoading, setFormValues }) {
 							page: query.page + 1,
 						}))
 					}
+					disabled={query.page === maxPage}
 					sx={{ m: 1 }}
 					variant="contained"
 				>

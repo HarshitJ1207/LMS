@@ -145,7 +145,7 @@ const IssueHistory = ({ issueHistory }) => {
 									}}
 								>
 									<TableCell align="center">
-										{issue.userID.details.username}
+										{issue.userID.username}
 									</TableCell>
 									<TableCell align="center">
 										{new Date(
@@ -171,18 +171,19 @@ const IssueHistory = ({ issueHistory }) => {
 	);
 };
 
-// Main AdminBookDetail Component
 const AdminBookDetail = () => {
 	const { id } = useParams();
 	const navigate = useNavigate();
 	const [book, setBook] = useState(null);
-	const [issueHistory, setIssueHistory] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchBookDetails = async () => {
             try {
+				setLoading(true);
+				setError(null);
+				setBook(null);
 				const token = localStorage.getItem("token");
                 const url = `${process.env.REACT_APP_API_BASE_URL}/admin/books/${id}`;
                 const response = await fetch(url, {
@@ -198,13 +199,6 @@ const AdminBookDetail = () => {
                 }
                 const data = await response.json();
                 setBook(data.book);
-    
-                const sortedIssueHistory = data.book.issueHistory.sort((b, a) => new Date(a.issueDate) - new Date(b.issueDate));
-    
-                if (JSON.stringify(sortedIssueHistory) !== JSON.stringify(issueHistory)) {
-                    setIssueHistory(sortedIssueHistory);
-                }
-                console.log(sortedIssueHistory);
             } catch (error) {
                 setError(error);
             } finally {
@@ -212,7 +206,7 @@ const AdminBookDetail = () => {
             }
         };
         fetchBookDetails();
-    }, [id, issueHistory]);
+    }, [id]);
 
 	const handleRemoveBook = async () => {
 		try {
@@ -255,7 +249,7 @@ const AdminBookDetail = () => {
 				{book && (
 					<BookDetails book={book} onRemoveBook={handleRemoveBook} />
 				)}
-				<IssueHistory issueHistory={issueHistory} />
+				<IssueHistory issueHistory={book.issueHistory} />
 			</Container>
 		</React.Fragment>
 	);

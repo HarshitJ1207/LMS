@@ -9,15 +9,17 @@ import {
 } from '@mui/material';
 
 const AdminAddUser = () => {
-    const [username, setUsername] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [contactNumber, setContactNumber] = useState("");
     const [userType, setUserType] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [errors, setErrors] = useState({});
     const [formLoading, setFormLoading] = useState(false);
     const [success, setSuccess] = useState(null);
-    const [responseError, setResponseError] = useState(null);
+    console.log(errors);
     const userTypes = [
         "Faculty",
         "Admin",
@@ -25,53 +27,52 @@ const AdminAddUser = () => {
         "Permanent Staff",
         "Contractual Staff",
         "Research Scholars/PhD",
-        "PG Student",
-        "UG Students",
+        "PG Student", 
+        "UG Student",
         "Young Learner",
     ];
 
     const validate = () => {
-        const errors = {};
-        if (!username) {
-            errors.username = "Username is required";
-        } else if (username.length < 4 || username.length > 12) {
-            errors.username = "Username must be between 4 and 12 characters";
+		const errors = {};
+        if(!firstName.trim()){
+            errors.firstName = "First name is required";
         }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email) {
-            errors.email = "Email is required";
-        } else if (!emailRegex.test(email)) {
-            errors.email = "Email is not valid";
+        if(!lastName.trim()){
+            errors.lastName = "Last name is required";
         }
-
-        const contactNumberRegex = /^\d{10}$/;
-        if (!contactNumber) {
-            errors.contactNumber = "Contact number is required";
-        } else if (!contactNumberRegex.test(contactNumber)) {
-            errors.contactNumber = "Contact number must be a 10-digit number";
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!email) {
+			errors.email = "Email is required";
+		} else if (!emailRegex.test(email.trim().toLowerCase())) {
+			errors.email = "Email is not valid";
+		}
+		const contactNumberRegex = /^\d{10}$/;
+		if (!contactNumber) {
+			errors.contactNumber = "Contact number is required";
+		} else if (!contactNumberRegex.test(contactNumber.trim())) {
+			errors.contactNumber = "Contact number must be a 10-digit number";
+		}
+		if (!userType) {
+			errors.userType = "User type is required";
+		}
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{4,12}$/;
+		if (!password) {
+			errors.password = "Password is required";
+		} else if (!passwordRegex.test(password)) {
+			errors.password =
+				"Password must contain at least one letter, one number, and be between 4 and 12 characters long";
+		}
+        if (password !== confirmPassword) {
+            errors.confirmPassword = "Passwords do not match";
         }
-
-        if (!userType) {
-            errors.userType = "User type is required";
-        }
-
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,12}$/;
-        if (!password) {
-            errors.password = "Password is required";
-        } else if (!passwordRegex.test(password)) {
-            errors.password =
-                "Password must be alphanumeric, contain at least one letter and one number, and be between 4 and 12 characters long";
-        }
-
-        return errors;
-    };
+		return errors;
+	};
 
     const handleSubmit = async (e) => {
+        if (formLoading) return;
         setFormLoading(true);
         setSuccess(null);
         setErrors({});
-        setResponseError(null);
         e.preventDefault();
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) {
@@ -90,33 +91,30 @@ const AdminAddUser = () => {
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
-                        username,
-                        email,
-                        contactNumber,
+                        firstName: firstName.trim(),
+                        lastName: lastName.trim(),
+                        email: email.toLowerCase().trim(),
+                        contactNumber: contactNumber.trim(),
                         userType,
                         password,
+                        confirmPassword,
                     }),
                 }
             );
             if (!response.ok) {
                 const errorData = await response.json().catch(() => {
-                    throw new Error("Network response was not ok");
+                    throw new Error(JSON.stringify({message: "Network response was not ok"}));
                 });
-                throw new Error(errorData.error || "Network response was not ok");
+                throw new Error(JSON.stringify(errorData.errors));
             }
-            setUsername("");
-            setEmail("");
-            setContactNumber("");
-            setUserType("");
-            setPassword("");
-            setSuccess("User added successfully");
+            const data = await response.json();
+            setSuccess(data.message);
         } catch (error) {
-            setResponseError(error.message);
+            setErrors(JSON.parse(error.message));  
         } finally {
             setFormLoading(false);
         }
     };
-
     return (
         <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', mt: 3 }}>
             <Paper elevation={3} sx={{ p: 3, mb: 3, width: '100%' }}>
@@ -125,15 +123,26 @@ const AdminAddUser = () => {
                 </Typography>
                 <form onSubmit={handleSubmit}>
                     <TextField
-                        label="Username"
+                        label="First Name"
                         type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
                         fullWidth
                         margin="normal"
                         required
-                        error={!!errors.username}
-                        helperText={errors.username}
+                        error={!!errors.firstName}
+                        helperText={errors.firstName}
+                    />
+                    <TextField
+                        label="Last Name"
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        required
+                        error={!!errors.lastName}
+                        helperText={errors.lastName}
                     />
                     <TextField
                         label="Email"
@@ -186,6 +195,17 @@ const AdminAddUser = () => {
                         error={!!errors.password}
                         helperText={errors.password}
                     />
+                    <TextField
+                        label="Confirm Password"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        required
+                        error={!!errors.confirmPassword}
+                        helperText={errors.confirmPassword}
+                    />
                     <Button
                         type="submit"
                         variant="contained"
@@ -200,8 +220,8 @@ const AdminAddUser = () => {
                     >
                         {formLoading ? 'Adding User...' : 'Add User'}
                     </Button>
-                    {success && <Typography color="success" sx={{ mt: 2 }}>{success}</Typography>}
-                    {responseError && <Typography color="error" sx={{ mt: 2 }}>{responseError}</Typography>}
+                    {success && <Typography color="success.main" sx={{ mt: 2 }}>{success}</Typography>}
+                    {errors.message && <Typography color="error.main" sx={{ mt: 2 }}>{errors.message}</Typography>}
                 </form>
             </Paper>
         </Container>

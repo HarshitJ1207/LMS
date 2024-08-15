@@ -18,12 +18,12 @@ const AdminBookIssue = () => {
 
     const handleBlur = async () => {
         setUserData(null);
-        setError('');
+        setError(null);
         setSuccess(null);
         if (username) {
             try {
                 const token = localStorage.getItem('token');
-                const url = `${process.env.REACT_APP_API_BASE_URL}/admin/users/${username}`;
+                const url = `${process.env.REACT_APP_API_BASE_URL}/admin/users/${username.toLowerCase().trim()}`;
                 const response = await fetch(url, {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -31,15 +31,13 @@ const AdminBookIssue = () => {
                 });
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => {
-                        throw new Error('Network response was not ok');
+                        throw new Error('Internal Server Error');
                     });
-                    throw new Error(errorData.error || 'Network response was not ok');
+                    throw new Error(errorData.error || 'Internal Server Error');    
                 }
                 const data = await response.json();
                 setUserData(data.user);
-                setError('');
             } catch (err) {
-                setUserData(null);
                 setError(err.message);
             }
         } else {
@@ -51,30 +49,33 @@ const AdminBookIssue = () => {
         if (formLoading) return;
         e.preventDefault();
         setFormLoading(true);
+        setError(null);
+        setSuccess(null);
+        setUserData(null);
         try {
             const token = localStorage.getItem('token');
             const url = `${process.env.REACT_APP_API_BASE_URL}/admin/bookIssue`;
             const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ username, bookID })
-            });
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({
+					username: username.toLowerCase().trim(),
+					bookID: bookID.trim(),
+				}),
+			});
             if (!response.ok) {
                 const errorData = await response.json().catch(() => {
-                    throw new Error('Network response was not ok');
+                    throw new Error('Internal Server Error');
                 });
-                throw new Error(errorData.error || 'Network response was not ok');
+                throw new Error(errorData.error || 'Internal Server Error');
             }
             const data = await response.json();
-            setError(null);
             setSuccess(data.message);
-            handleBlur();
         } catch (err) {
             setError(err.message);
-            setSuccess(null);
         } finally {
             setFormLoading(false);
         }
@@ -115,8 +116,8 @@ const AdminBookIssue = () => {
                         required
                     />
 
-                    {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
-                    {success && <Typography color="success" sx={{ mb: 2 }}>{success}</Typography>}
+                    {error && <Typography color="error.main" sx={{ mb: 2 }}>{error}</Typography>}
+                    {success && <Typography color="success.main" sx={{ mb: 2 }}>{success}</Typography>}
 
                     <Button
                         type="submit"

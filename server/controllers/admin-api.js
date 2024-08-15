@@ -5,7 +5,7 @@ const User = require('../models/user');
 const Book = require('../models/book');
 const BookIssue = require('../models/bookIssue');
 const dbs = require('../models/databaseStats');
-
+const perPage = 30;
 
 
 function newBookID(oldBookID){
@@ -34,30 +34,66 @@ const calculateFine = (daysOverdue) => {
 	return daysOverdue * finePerDay;
 };
 
-exports.getusers = async (req, res) => {
+exports.getDashboard = async (req, res) => {
     try {
-        const { searchType, searchValue, userType } = req.query;
-        console.log(req.query);
-        const query = {};
-        if (searchValue && searchValue.trim() !== '') {
-            query[`details.${searchType}`] = { $regex: searchValue, $options: 'i' };
-        }
-        if (userType && userType !== 'any') {
-            query['details.userType'] = userType;
-        }
-        const userList = await User.find(query);
+        const stats = await dbs.findOne();
         res.status(200).json({
-            userList,
+            totalBooks: stats.totalBooks,
+            totalUsers: stats.totalUsers,
+            recentActivities: stats.recentActivities,
+            activeUsers: stats.activeUsers,
         });
     } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error fetching dashboard data:', error);
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+
+exports.getusers = async (req, res) => {
+    try {
+        console.log(req.query);
+        const {
+            page = 1,
+            searchType = "name",
+            searchValue = "",
+            userType = "any",
+        } = req.query;
+        let decodedPage = parseInt(page, 10);
+        if (isNaN(decodedPage) || decodedPage < 1) {
+            decodedPage = 1;
+        }
+        const decodedSearchType = decodeURIComponent(searchType) === 'username' ? decodeURIComponent(searchType): `details.${decodeURIComponent(searchType)}`;
+        const decodedSearchValue = decodeURIComponent(searchValue).trim();
+        const decodedUserType = decodeURIComponent(userType);
+        const query = {
+            [decodedSearchType]: { $regex: decodedSearchValue, $options: "i" },
+        };
+
+        if (decodedUserType !== "any") {
+            query["details.userType"] = decodedUserType;
+        }
+        console.log(query);
+        const userList = await User.find(query).skip((decodedPage - 1) * perPage)
+        .limit(perPage);
+        const totalUsers = await User.countDocuments(query);
+        const maxPage = Math.ceil(totalUsers / perPage);
+        res.status(200).json({userList, maxPage});
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        if (error instanceof SyntaxError) {
+            res.status(400).json({ error: "Invalid query parameters" });
+        } else if (error.name === "MongoError") {
+            res.status(500).json({ error: "Database error" });
+        } else {
+            res.status(500).json({ error: "Internal server error" });
+        }
     }
 };
 
 exports.getuser = async (req, res) => {
     try {
-        const user = await User.findOne({ 'details.username': req.params.username })
+        const user = await User.findOne({ 'username': req.params.username.trim().toLowerCase()})
         .populate({
             path: 'issueHistory',
             model: 'BookIssue',
@@ -102,12 +138,40 @@ exports.getuser = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+async function generateUsername(firstName, lastName) {
+    firstName = firstName.toLowerCase();
+    lastName = lastName.toLowerCase();
+    const prefix = `${firstName}.${lastName[0]}`;
+
+    const users = await User.find({ username: { $regex: `^${prefix}` } }, 'username');
+    const existingUsernames = new Set(users.map(user => user.username));
+
+    let username = prefix;
+    let index = 1;
+
+    while (existingUsernames.has(username) && index <= lastName.length) {
+        username = `${firstName}.${lastName.slice(0, index + 1)}`;
+        index++;
+    }
+
+    let suffix = 1;
+    while (existingUsernames.has(username)) {
+        username = `${prefix}${suffix}`;
+        suffix++;
+    }
+    return username;
+}
+
 exports.postAddUser = async (req, res) => {
     try {
         const errors = validationResult(req).array();
+        console.log(errors);    
+        const errorObj = {};
+        errors.forEach(error => { errorObj[error.path] = error.msg });
         if (errors.length) {
             return res.status(400).json({
-                error: "validation failed",
+                errors: errorObj,
             });
         }
         let maxBooks = 0;
@@ -138,7 +202,7 @@ exports.postAddUser = async (req, res) => {
                 maxBooks = 6;
                 issueDuration = 30;
                 break;
-            case 'UG Students':
+            case 'UG Student':
                 maxBooks = 4;
                 issueDuration = 15;
                 break;
@@ -147,17 +211,19 @@ exports.postAddUser = async (req, res) => {
                 issueDuration = 15;
                 break;
             default:
-                maxBooks = 3;
-                issueDuration = 15;
-                break;
+                return res.status(400).json({
+                    errors: {message: 'Invalid user type'},
+                });
         }
         const user = await User.create({
+            username: await generateUsername(req.body.firstName, req.body.lastName),
+            password: req.body.password,
             details: {
-                username: req.body.username,
-                email: req.body.email,
-                contactNumber: req.body.contactNumber,
-                userType: req.body.userType,
-                password: req.body.password,
+                email: req.body.email.trim().toLowerCase(),
+                contactNumber: req.body.contactNumber.trim(),
+                userType: req.body.userType.trim(),
+                firstName: req.body.firstName.trim(),
+                lastName: req.body.lastName.trim(),
             },
             admin: req.body.userType === 'Admin',
             bookIssuePrivilege: {
@@ -167,18 +233,19 @@ exports.postAddUser = async (req, res) => {
         });
         await user.save();
         const stats = await dbs.findOne();
-        stats.recentActivities.push(`New user ${req.body.username} added`);
+        stats.recentActivities.push(`New user ${user.username} added`);
         if (stats.recentActivities.length > 100) {
             stats.recentActivities.shift();
         }
+        stats.totalUsers++;
         await stats.save();
         res.status(201).json({
-            message: 'User successfully added'
+            message: 'User successfully added: ' + user.username,
         });
     } catch (error) {
         console.error(error);
         res.status(500).json({
-            error: error.message
+            errors: {message: error.message},
         });
     }
 };
@@ -187,24 +254,23 @@ exports.postAddUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     console.log('delete user request', req.params);
     try {
-        const username = req.params.username.trim();
-        const user = await User.findOne({ 'details.username': username });
-        if (!user) {
-            return res.status(404).json({
-                error: 'User not found'
-            });
-        }
-        if (user.currentIssues.length > 0) {
+        const errors = validationResult(req).array();
+        console.log(errors);    
+        const errorObj = {};
+        errors.forEach(error => { errorObj[error.path] = error.msg });
+        if (errors.length) {
             return res.status(400).json({
-                error: 'User cannot be deleted due to pending book returns'
+                errors: errorObj,
             });
         }
-        await User.deleteOne({ 'details.username': username });
+        const username = req.params.username.toLowerCase().trim();
+        await User.findOneAndDelete({ 'username': username });
         const stats = await dbs.findOne();
         stats.recentActivities.push(`User ${username} deleted`);
         if (stats.recentActivities.length > 100) {
             stats.recentActivities.shift();
         }
+        stats.totalUsers--;
         await stats.save();
         res.status(200).json({
             message: 'User successfully deleted'
@@ -212,7 +278,7 @@ exports.deleteUser = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({
-            error: error.message
+            errors: {message: error.message},
         });
     }
 };
@@ -221,9 +287,12 @@ exports.postAddBook = async (req, res) => {
     console.log(req.body);
     try {
         const errors = validationResult(req).array();
+        console.log(errors);    
+        const errorObj = {};
+        errors.forEach(error => { errorObj[error.path] = error.msg });
         if (errors.length) {
             return res.status(400).json({
-                error: errors[0].msg,
+                errors: errorObj,
             });
         }
         const doc = await dbs.findOne();
@@ -231,27 +300,28 @@ exports.postAddBook = async (req, res) => {
         const book = await Book.create({
             bookID: bookID,
             details: {
-                subject: req.body.subject,
-                title: req.body.title,
-                author: req.body.author,
-                ISBN: req.body.ISBN,
+                subject: req.body.subject.trim(),
+                title: req.body.title.trim(),
+                author: req.body.author.trim(),
+                ISBN: req.body.ISBN.trim(),
             },
         });
         doc.lastAllocatedBookID = bookID;
         await book.save();
         await doc.save();
         const stats = await dbs.findOne();
-        stats.recentActivities.push(`New book ${bookID} added`);
+        stats.recentActivities.push(`New book ${bookID} added: ${req.body.title}`);
         if (stats.recentActivities.length > 100) {
             stats.recentActivities.shift();
         }
+        stats.totalBooks++;
         await stats.save();
         res.status(201).json({
             message: 'Book Successfully Added',
         });
     } catch (error) {
         res.status(500).json({
-            error: error.message,
+            errors: {message: error.message},
         });
     }
 };
@@ -260,36 +330,31 @@ exports.postAddBook = async (req, res) => {
 exports.deleteBook = async (req, res) => {
     try {
         const errors = validationResult(req).array();
+        console.log(errors);    
+        const errorObj = {};
+        errors.forEach(error => { errorObj[error.path] = error.msg });
         if (errors.length) {
             return res.status(400).json({
-                error: errors[0].msg,
+                errors: errorObj,
             });
         }
-        const bookID = req.params.bookID;
-        const book = await Book.findOne({ bookID: bookID });
-        if (!book) {
-            return res.status(404).json({
-                error: 'Book not found',
-            });
-        }
-        if (!book.availability) {
-            return res.status(400).json({
-                error: 'Book is currently issued to a user and cannot be deleted',
-            });
-        }
+        const bookID = req.params.bookID.trim();
         await Book.findOneAndDelete({ bookID: bookID });
         const stats = await dbs.findOne();
         stats.recentActivities.push(`Book ${bookID} deleted`);
         if (stats.recentActivities.length > 100) {
             stats.recentActivities.shift();
         }
+        stats.totalBooks--;
         await stats.save();
         res.status(200).json({
             message: 'Book Successfully Deleted',
         });
     } catch (error) {
         res.status(500).json({
-            error: error.message,
+            errors: {
+                message: error.message,
+            }
         });
     }
 };
@@ -297,8 +362,8 @@ exports.deleteBook = async (req, res) => {
 exports.postBookIssue = async (req, res) => {
     console.log(req.body);
     try {
-        const book = await Book.findOne({ 'bookID': req.body.bookID });
-        const user = await User.findOne({ 'details.username': req.body.username });
+        const book = await Book.findOne({ 'bookID': req.body.bookID.trim() });
+        const user = await User.findOne({ 'username': req.body.username.trim().toLowerCase() });
 
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -332,7 +397,7 @@ exports.postBookIssue = async (req, res) => {
         await user.save();
         await book.save();
         const stats = await dbs.findOne();
-        stats.recentActivities.push(`Book ${book.bookID} issued to ${user.details.username}`);
+        stats.recentActivities.push(`Book ${book.bookID} issued to ${user.username}`);
         if (stats.recentActivities.length > 100) {
             stats.recentActivities.shift();
         }
@@ -347,10 +412,10 @@ exports.postBookIssue = async (req, res) => {
 exports.getIssueData = async (req, res) => {
     try {
         console.log(req.query);
-        if (!req.query.bookID) {
+        if (!req.query.bookID.trim()) {
             return res.status(400).json({ error: 'BookID is required' });
         }
-        const book = await Book.findOne({ 'bookID': req.query.bookID });
+        const book = await Book.findOne({ 'bookID': req.query.bookID.trim()});
         if (!book) {
             return res.status(404).json({ error: 'Book not found' });
         }
@@ -363,28 +428,25 @@ exports.getIssueData = async (req, res) => {
         if (!bookIssue) {
             return res.status(404).json({ error: 'Issue record not found' });
         }
-
         const user = await User.findById(bookIssue.userID);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-
         const daysOverdue = calculateDaysOverdue(new Date(), bookIssue.returnDate);
         const fine = daysOverdue * 15;
-        res.status(200).json({ user: user.details.username, daysOverdue: daysOverdue, fine: fine });
+        res.status(200).json({ user: user.username, daysOverdue: daysOverdue, fine: fine });
     } catch (err) {
         console.error('Error fetching issue data:', err); 
-        res.status(500).json({ error: err.message || 'Internal server error' }); 
+        res.status(500).json({ error: 'Internal server error' }); 
     }
 };
 
 exports.postBookReturn = async (req, res) => {
     try {
-        const book = await Book.findOne({ 'bookID': req.body.bookID });
+        const book = await Book.findOne({ 'bookID': req.body.bookID.trim() });
         if (!book) {
             return res.status(404).json({ error: 'Book not found' });
         }
-
         const bookIssueID = book.issueHistory[book.issueHistory.length - 1];
         const bookIssue = await BookIssue.findById(bookIssueID);
         if (!bookIssue) {
@@ -405,7 +467,7 @@ exports.postBookReturn = async (req, res) => {
             user.save()
         ]);
         const stats = await dbs.findOne();
-        stats.recentActivities.push(`Book ${book.bookID} returned by ${user.details.username}`);
+        stats.recentActivities.push(`Book ${book.bookID} returned by ${user.username}`);
         if (stats.recentActivities.length > 100) {
             stats.recentActivities.shift();
         }
@@ -419,7 +481,7 @@ exports.postBookReturn = async (req, res) => {
 
 exports.getBook = async (req, res) => {
     try {
-        let book = await Book.findOne({ bookID: req.params.bookID });
+        let book = await Book.findOne({ bookID: req.params.bookID.trim() });
         if (!book) {
             res.status(404).json({ error: 'Book not found' });
             return;

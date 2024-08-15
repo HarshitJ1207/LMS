@@ -16,7 +16,6 @@ function Books() {
 		subject: "",
 	});
 	const [loading, setLoading] = useState(true);
-
 	return (
 		<Container maxWidth="lg">
 			<BookSearchBox

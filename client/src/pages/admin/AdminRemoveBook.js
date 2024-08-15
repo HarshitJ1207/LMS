@@ -12,14 +12,13 @@ const AdminRemoveBook = () => {
     const [errors, setErrors] = useState({});
     const [formLoading, setFormLoading] = useState(false);
     const [success, setSuccess] = useState(null);
-    const [responseError, setResponseError] = useState(null);
-
+    console.log(errors);
     const validate = () => {
         const errors = {};
         if (!bookId) {
-            errors.bookId = "Book ID is required";
-        } else if (!/^[A-Z]\d{4}$/.test(bookId)) {
-            errors.bookId = "Invalid BookId";
+            errors.bookID = "Book ID is required";
+        } else if (!/^[A-Z]\d{4}$/.test(bookId.trim())) {
+            errors.bookID = "Invalid BookId";
         }
         return errors;
     };
@@ -29,7 +28,6 @@ const AdminRemoveBook = () => {
         setFormLoading(true);
         setSuccess(null);
         setErrors({});
-        setResponseError(null);
         e.preventDefault();
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) {
@@ -40,7 +38,7 @@ const AdminRemoveBook = () => {
         try {
             const token = localStorage.getItem("token");
             const response = await fetch(
-                `${process.env.REACT_APP_API_BASE_URL}/admin/removeBook/${bookId}`,
+                `${process.env.REACT_APP_API_BASE_URL}/admin/removeBook/${bookId.trim()}`,
                 {
                     method: "DELETE",
                     headers: {
@@ -51,16 +49,19 @@ const AdminRemoveBook = () => {
             );
             if (!response.ok) {
                 const errorData = await response.json().catch(() => {
-                    throw new Error("Network response was not ok");
+                    throw new Error(JSON.stringify({message: "Internal Server Error"}));
                 });
-                throw new Error(errorData.error || "Network response was not ok");
+                if (errorData.errors) {
+					throw new Error(JSON.stringify(errorData.errors));
+				} else {
+					throw new Error(JSON.stringify({ message: "Internal Server Error" }));
+				}
             }
-            setBookId("");
             setErrors({});
             const data = await response.json();
             setSuccess(data.message);
         } catch (error) {
-            setResponseError(error.message);
+            setErrors(JSON.parse(error.message)); 
         } finally {
             setFormLoading(false);
         }
@@ -81,8 +82,8 @@ const AdminRemoveBook = () => {
                         fullWidth
                         margin="normal"
                         required
-                        error={!!errors.bookId}
-                        helperText={errors.bookId}
+                        error={!!errors.bookID}
+                        helperText={errors.bookID}
                     />
                     <Button
                         type="submit"
@@ -98,8 +99,8 @@ const AdminRemoveBook = () => {
                     >
                         {formLoading ? 'Loading...' : 'Remove Book'}
                     </Button>
-                    {success && <Typography color="success" sx={{ mt: 2 }}>{success}</Typography>}
-                    {responseError && <Typography color="error" sx={{ mt: 2 }}>{responseError}</Typography>}
+                    {success && <Typography color="success.main" sx={{ mt: 2 }}>{success}</Typography>}
+                    {errors.message && <Typography color="error.main" sx={{ mt: 2 }}>{errors.message}</Typography>}
                 </form>
             </Paper>
         </Container>

@@ -38,7 +38,8 @@ const UserDetailsCard = ({ userDetails }) => {
 			</Typography>
 			<Grid container spacing={2}>
 				{[
-					{ label: "Username:", value: userDetails.details.username },
+					{ label: "Username:", value: userDetails.username },
+					{ label: "Name:", value: userDetails.details.firstName + " " + userDetails.details.lastName },
 					{ label: "Email:", value: userDetails.details.email },
 					{
 						label: "Contact Number:",

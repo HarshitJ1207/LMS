@@ -12,10 +12,10 @@ const AdminRemoveUser = () => {
     const [errors, setErrors] = useState({});
     const [formLoading, setFormLoading] = useState(false);
     const [success, setSuccess] = useState(null);
-
+    console.log(errors);
     const validate = () => {
         const errors = {};
-        if (!username) errors.username = "Username is required";
+        if (!username.trim()) errors.username = "Username is required";
         return errors;
     };
 
@@ -33,7 +33,7 @@ const AdminRemoveUser = () => {
         }
         try {
             const response = await fetch(
-                `${process.env.REACT_APP_API_BASE_URL}/admin/removeUser/${username}`,
+                `${process.env.REACT_APP_API_BASE_URL}/admin/removeUser/${username.trim().toLowerCase()}`,
                 {
                     method: "DELETE",
                     headers: {
@@ -44,21 +44,22 @@ const AdminRemoveUser = () => {
             );
             if (!response.ok) {
                 const errorData = await response.json().catch(() => {
-                    throw new Error("Network response was not ok");
+                    throw new Error(JSON.stringify({message: "Internal Server Error"}));
                 });
-                throw new Error(errorData.error || "Network response was not ok");
+                if (errorData.errors) {
+                    throw new Error(JSON.stringify(errorData.errors));
+                } else {
+                    throw new Error(JSON.stringify({ message: "Internal Server Error" }));
+                }
             }
             const data = await response.json();
-            setUsername("");
-            setErrors({});
             setSuccess(data.message);
         } catch (error) {
-            setErrors({ username: error.message });
+            setErrors(JSON.parse(error.message));
         } finally {
             setFormLoading(false);
         }
     };
-
     return (
         <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', mt: 3 }}>
             <Paper elevation={3} sx={{ p: 3, mb: 3, width: '100%' }}>
@@ -77,6 +78,7 @@ const AdminRemoveUser = () => {
                         error={!!errors.username}
                         helperText={errors.username}
                     />
+                    {errors.message && <Typography color="error" sx={{ mt: 2 }}>{errors.message}</Typography>}  
                     <Button
                         type="submit"
                         variant="contained"

@@ -23,29 +23,33 @@ import {
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
-const UserSearchBox = ({ query, setQuery, setLoading }) => {
-	const [formState, setFormState] = useState(query);
+const UserSearchBox = ({ query, setQuery, setLoading, formValues, setFormValues }) => {
 	const [anchorEl, setAnchorEl] = useState(null);
 	const navigate = useNavigate();
 	const theme = useTheme();
 
 	const handleChange = (e) => {
 		const { name, value } = e.target;
-		setFormState((prevState) => ({
+		setFormValues((prevState) => ({
 			...prevState,
 			[name]: value,
 		}));
 	};
 
-	const handleSubmit = (e) => {
+	const onSubmit = (e) => {
 		e.preventDefault();
+		setQuery({...formValues, page: 1});
 		setLoading(true);
-		setQuery(formState);
 	};
 
 	const resetHandler = () => {
-		setQuery({ searchType: "username", userType: "any", searchValue: "" });
-		setFormState({
+		setFormValues({
+			searchType: "username",
+			userType: "any",
+			searchValue: "",
+		});
+		setQuery({
+			page: 1,
 			searchType: "username",
 			userType: "any",
 			searchValue: "",
@@ -83,7 +87,7 @@ const UserSearchBox = ({ query, setQuery, setLoading }) => {
 		>
 			<Box
 				component="form"
-				onSubmit={handleSubmit}
+				onSubmit={onSubmit}
 				sx={{
 					display: "flex",
 					flexWrap: "wrap",
@@ -93,7 +97,7 @@ const UserSearchBox = ({ query, setQuery, setLoading }) => {
 			>
 				<Select
 					name="searchType"
-					value={formState.searchType}
+					value={formValues.searchType}
 					onChange={handleChange}
 					sx={{
 						m: 1,
@@ -107,7 +111,7 @@ const UserSearchBox = ({ query, setQuery, setLoading }) => {
 				</Select>
 				<Select
 					name="userType"
-					value={formState.userType}
+					value={formValues.userType}
 					onChange={handleChange}
 					sx={{
 						m: 1,
@@ -123,7 +127,7 @@ const UserSearchBox = ({ query, setQuery, setLoading }) => {
 					<MenuItem value="Permanent Staff">
 						Staff (Permanent)
 					</MenuItem>
-					<MenuItem value="contractualStaff">
+					<MenuItem value="Contractual Staff">
 						Staff (Contractual)
 					</MenuItem>
 					<MenuItem value="Research Scholars/PhD">
@@ -139,7 +143,7 @@ const UserSearchBox = ({ query, setQuery, setLoading }) => {
 				<TextField
 					name="searchValue"
 					label="Search"
-					value={formState.searchValue}
+					value={formValues.searchValue}
 					onChange={handleChange}
 					sx={{
 						m: 1,
@@ -186,13 +190,17 @@ const UserSearchBox = ({ query, setQuery, setLoading }) => {
 	);
 };
 // UserTable Component
-const UserTable = ({ query, loading, setLoading }) => {
+const UserTable = ({ query, setQuery, loading, setLoading, setFormValues }) => {
 	const navigate = useNavigate();
 	const [userList, setUserList] = useState([]);
 	const [error, setError] = useState(null);
+	const [maxPage, setMaxPage] = useState(1);
 
 	useEffect(() => {
 		const fetchUserList = async () => {
+			setLoading(true);
+			setError(null);
+			setUserList([]);
 			try {
 				const params = new URLSearchParams(query).toString();
 				const url = `${process.env.REACT_APP_API_BASE_URL}/admin/users?${params}`;
@@ -211,6 +219,7 @@ const UserTable = ({ query, loading, setLoading }) => {
 				}
 				const data = await response.json();
 				setUserList(data.userList);
+				setMaxPage(data.maxPage);
 			} catch (error) {
 				setError(error);
 			} finally {
@@ -242,56 +251,114 @@ const UserTable = ({ query, loading, setLoading }) => {
         );
     }
 
-    return (
-        <Paper elevation={3} sx={{ m: 3, p: 4 }}>
-            <TableContainer>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell align="center">Username</TableCell>
-                            <TableCell align="center">Email</TableCell>
-                            <TableCell align="center">Contact Number</TableCell>
-                            <TableCell align="center">User Type</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {userList.map((user) => (
-                            <TableRow key={user.details.userID}>
-                                <TableCell
-                                    align="center"
-                                    onClick={() => idClickHandler(user.details.username)}
-                                    sx={{ cursor: "pointer" }}
-                                >
-                                    <Typography
-                                        component="button"
-                                        underline="hover"
-                                        sx={{ cursor: "pointer" }}
-                                    >
-                                        {user.details.username}
-                                    </Typography>
-                                </TableCell>
-                                <TableCell align="center">
-                                    {user.details.email}
-                                </TableCell>
-                                <TableCell align="center">
-                                    {user.details.contactNumber}
-                                </TableCell>
-                                <TableCell align="center">
-                                    {user.details.userType}
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Paper>
-    );
+	return (
+		<Paper elevation={3} sx={{ m: 3, p: 4 }}>
+			<TableContainer>
+				<Table>
+					<TableHead>
+						<TableRow sx={{ backgroundColor: "#f0f0f0" }}>
+							<TableCell align="center">Username</TableCell>
+							<TableCell align="center">Name</TableCell>
+							<TableCell align="center">Email</TableCell>
+							<TableCell align="center">Contact Number</TableCell>
+							<TableCell align="center">User Type</TableCell>
+						</TableRow>
+					</TableHead>
+					<TableBody>
+						{userList.map((user, index) => (
+							<TableRow
+								key={user.username}
+								sx={{
+									backgroundColor:
+										index % 2 === 1 ? "#f0f0f0" : "#ffffff",
+								}}
+							>
+								<TableCell
+									align="center"
+									onClick={() =>
+										idClickHandler(user.username)
+									}
+									sx={{ cursor: "pointer" }}
+								>
+									{user.username}
+								</TableCell>
+								<TableCell align="center">
+									{user.details.firstName}{" "}
+									{user.details.lastName}
+								</TableCell>
+								<TableCell align="center">
+									{user.details.email}
+								</TableCell>
+								<TableCell align="center">
+									{user.details.contactNumber}
+								</TableCell>
+								<TableCell
+									align="center"
+									onClick={() => {
+										setFormValues({
+											searchType: "username",
+											userType: user.details.userType,
+											searchValue: '',
+										});
+										setQuery({
+											page: 1,
+											searchType: "username",
+											userType: user.details.userType,
+											searchValue: '',
+										});
+										setLoading(true);
+									}}
+									sx={{ cursor: "pointer" }}
+								>
+									{user.details.userType}
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</TableContainer>
+			<Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+				<Button
+					onClick={() =>
+						setQuery((query) => ({
+							...query,
+							page: query.page - 1,
+						}))
+					}
+					disabled={query.page === 1}
+					sx={{ m: 1 }}
+					variant="contained"
+				>
+					Previous
+				</Button>
+				<Button
+					onClick={() =>
+						setQuery((query) => ({
+							...query,
+							page: query.page + 1,
+						}))
+					}
+					disabled={query.page === maxPage}
+					sx={{ m: 1 }}
+					variant="contained"
+				>
+					Next
+				</Button>
+			</Box>
+		</Paper>
+	);
 };
 
 
 const AdminUsers = () => {
 	console.log("render");
 	const [query, setQuery] = useState({
+		page: 1,
+		searchType: "username",
+		userType: "any",
+		searchValue: "",
+	});
+	const [formValues, setFormValues] = useState({
 		searchType: "username",
 		userType: "any",
 		searchValue: "",
@@ -304,11 +371,16 @@ const AdminUsers = () => {
 				query={query}
 				setQuery={setQuery}
 				setLoading={setLoading}
+				formValues={formValues}
+				setFormValues={setFormValues}
 			/>
 			<UserTable
 				query={query}
+				setQuery={setQuery}
 				setLoading={setLoading}
 				loading={loading}
+				formValues={formValues}
+				setFormValues={setFormValues}
 			/>
 		</Container>
 	);

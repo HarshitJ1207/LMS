@@ -5,7 +5,6 @@ const Schema = mongoose.Schema;
 const bookSchema = new Schema({
     availability:{
         type: Boolean,
-        required: true,
         default: true
     },
     bookID: {

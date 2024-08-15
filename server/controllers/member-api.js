@@ -1,8 +1,11 @@
 const moment = require("moment");
 const User = require("../models/user");
 const Book = require("../models/book");
+const dbs = require("../models/databaseStats");
 const perPage = 30;
 const jwt = require("jsonwebtoken");
+const { validationResult } = require('express-validator')
+
 
 const calculateDaysOverdue = (dateofReturn, returnDate) => {
 	const returnDateMoment = moment(returnDate);
@@ -29,11 +32,13 @@ exports.getLoginStatus = async (req, res) => {
 
 exports.postLogin = async (req, res) => {
 	try {
-		const { username, password } = req.body;
+		let { username, password } = req.body;
+		username = username.toLowerCase();
+		username = username.trim();
 		console.log("Login attempt:", req.body);
 		const user = await User.findOne({
-			"details.username": username,
-			"details.password": password,
+			"username": username,
+			"password": password,
 		});
 
 		if (!user) {
@@ -42,14 +47,14 @@ exports.postLogin = async (req, res) => {
 			});
 		}
 		const token = jwt.sign(
-			{ username: user.details.username },
+			{ username: user.username },
 			process.env.JWT_SECRET,
-			{ expiresIn: "1h" }
+			{ expiresIn: "24h" }
 		);
         res.status(200).json({ token, userType: user.details.userType });
 	} catch (error) {
 		console.error("Internal server error:", error);
-		return res.status(500).json({ error: "Internal server error" });
+		return res.status(500).json({ error: error.message });
 	}
 };
 
@@ -67,7 +72,7 @@ exports.getBooks = async (req, res) => {
 		if (isNaN(decodedPage) || decodedPage < 1) {
 			decodedPage = 1;
 		}
-
+		
 		const decodedSearchType = `details.${decodeURIComponent(searchType)}`;
 		const decodedSearchValue = decodeURIComponent(searchValue);
 		const decodedSubject = decodeURIComponent(subject);
@@ -82,7 +87,9 @@ exports.getBooks = async (req, res) => {
 		const bookList = await Book.find(query)
 			.skip((decodedPage - 1) * perPage)
 			.limit(perPage);
-		res.status(200).json({ bookList });
+		const totalBooks = await Book.countDocuments(query);
+		const maxPage = Math.ceil(totalBooks / perPage);
+		res.status(200).json({ bookList, maxPage });
 	} catch (error) {
 		console.error("Error fetching books:", error);
 		if (error instanceof SyntaxError) {
@@ -101,9 +108,8 @@ exports.getMe = async (req, res) => {
 		if (!req.user) {
 			return res.status(401).json({ error: "Unauthorized" });
 		}
-
 		const user = await User.findOne({
-			"details.username": req.user.details.username,
+			"username": req.user.username,
 		})
         .populate({
             path: "issueHistory",
@@ -158,51 +164,66 @@ exports.getMe = async (req, res) => {
 };
 
 
+async function generateUsername(firstName, lastName) {
+    firstName = firstName.toLowerCase();
+    lastName = lastName.toLowerCase();
+    const prefix = `${firstName}.${lastName[0]}`;
+
+    const users = await User.find({ username: { $regex: `^${prefix}` } }, 'username');
+    const existingUsernames = new Set(users.map(user => user.username));
+
+    let username = prefix;
+    let index = 1;
+
+    while (existingUsernames.has(username) && index <= lastName.length) {
+        username = `${firstName}.${lastName.slice(0, index + 1)}`;
+        index++;
+    }
+
+    let suffix = 1;
+    while (existingUsernames.has(username)) {
+        username = `${prefix}${suffix}`;
+        suffix++;
+    }
+    return username;
+}
+
 exports.postSignup = async (req, res) => {
-	const { username, email, contactNumber, password, confirmPassword } =
-		req.body;
-
-	const validateForm = (data) => {
-		const { username, password, confirmPassword, contactNumber } = data;
-
-		if (username.length < 4 || username.length > 12) {
-			return "Username must be between 4 and 12 characters long";
-		}
-		if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{4,12}$/.test(password)) {
-			return "Password must be alphanumeric, contain at least one letter and one number, and be between 4 and 12 characters long";
-		}
-		if (password !== confirmPassword) {
-			return "Passwords must match";
-		}
-		if (!/^\d{10}$/.test(contactNumber)) {
-			return "Contact number must be 10 digits";
-		}
-		if (!/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/.test(email)) {
-			return "Invalid email address";
-		}
-		return null;
-	};
-
-	const validationError = validateForm({
-		username,
-		password,
-		confirmPassword,
-		contactNumber,
-	});
-	if (validationError) {
-		return res.status(400).json({ error: validationError });
-	}
 	try {
-		const user = await User.create({
-			details: {
-				username: username,
-				email: email,
-				contactNumber: contactNumber,
-				password: password,
-			},
-		});
-		res.status(201).json({ message: "User created successfully", user });
-	} catch (error) {
-		res.status(500).json({ error: error.message });
-	}
+        const errors = validationResult(req).array();
+        console.log(errors);    
+        const errorObj = {};
+        errors.forEach(error => { errorObj[error.path] = error.msg });
+        if (errors.length) {
+            return res.status(400).json({
+                errors: errorObj,
+            });
+        }
+        const user = await User.create({
+            username: await generateUsername(req.body.firstName, req.body.lastName),
+            password: req.body.password,
+            details: {
+                email: req.body.email.trim().toLowerCase(),
+                contactNumber: req.body.contactNumber.trim(),
+                firstName: req.body.firstName.trim(),
+                lastName: req.body.lastName.trim(),
+            },
+        });
+        await user.save();
+        const stats = await dbs.findOne();
+        stats.recentActivities.push(`New guest user ${user.username} added`);
+        if (stats.recentActivities.length > 100) {
+            stats.recentActivities.shift();
+        }
+        stats.totalUsers++;
+        await stats.save();
+        res.status(201).json({
+            message: 'User successfully added: ' + user.username,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            errors: {message: error.message},
+        });
+    }
 };

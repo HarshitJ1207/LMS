@@ -11,7 +11,7 @@ const dbs = new Schema({
         type: Number,
         default: 0
     },
-    totalUsers:{
+    totalUsers: {
         type: Number,
         default: 0
     },
@@ -21,6 +21,18 @@ const dbs = new Schema({
             default: []
         }
     ],
+    activeUsers: {
+        type: [{
+            user: {
+                type: String,
+            },
+            lastActive: {
+                type: Date,
+            }
+        }],
+        default: []
+    }
 });
 
 module.exports = mongoose.model('databaseStats', dbs);
+

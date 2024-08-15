@@ -18,6 +18,7 @@ const StyledLink = styled(RouterLink)(({ theme }) => ({
 
 const NavButton = styled(Button)(({ theme }) => ({
     color: theme.palette.common.white,
+    fontSize: '1.1rem',
     "&:hover": {
         backgroundColor: theme.palette.primary.dark,
     },
@@ -151,7 +152,7 @@ function NavigationBar() {
                     </>
                 ) : (
                     <>
-                        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                        <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontSize: '1.2rem' }}>
                             <Box sx={{ display: "flex", gap: 2 }}>
                                 <NavLinks />
                             </Box>

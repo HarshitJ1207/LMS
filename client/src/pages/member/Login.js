@@ -21,6 +21,7 @@ function LoginForm() {
     };
 
     const submitHandler = async (e) => {
+        if(formLoading) return; 
         e.preventDefault();
         setFormLoading(true);
         setError('');
@@ -30,7 +31,10 @@ function LoginForm() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    username: formData.username.toLowerCase().trim(),
+                    password: formData.password,
+                }),
             });
             if(!response.ok) {
                 const errorData = await response.json().catch(() => {
@@ -76,7 +80,7 @@ function LoginForm() {
                         variant="outlined"
                         sx={{ mb: 2 }} 
                     />
-                    {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>} 
+                    {error && <Typography color="error.main" sx={{ mb: 2 }}>{error}</Typography>} 
                     <Button
                         type="submit"
                         variant="contained"

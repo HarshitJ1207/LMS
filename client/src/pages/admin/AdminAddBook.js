@@ -15,18 +15,18 @@ const AdminAddBook = () => {
     const [errors, setErrors] = useState({});
     const [formLoading, setFormLoading] = useState(false);
     const [success, setSuccess] = useState(null);
-    const [responseError, setResponseError] = useState(null);
+    console.log(errors);    
 
     const validate = () => {
         const errors = {};
-        if (title.length > 100)
+        if (title.trim().length > 100)
             errors.title = "Title must be less than 100 characters";
-        if (author.length > 100)
+        if (author.trim().length > 100)
             errors.author = "Author must be less than 100 characters";
-        if (subject.length > 100)
+        if (subject.trim().length > 100)
             errors.subject = "Subject must be less than 100 characters";
-        if (!/^\d{13}$/.test(isbn))
-            errors.isbn = "ISBN must be a 13-digit number";
+        if (!/^\d{13}$/.test(isbn.trim()))
+            errors.ISBN = "ISBN must be a 13-digit number";
         return errors;
     };
 
@@ -34,7 +34,6 @@ const AdminAddBook = () => {
         if (formLoading) return;
         setFormLoading(true);
         setSuccess(null);
-        setResponseError(null);
         setErrors({});
         e.preventDefault();
         const validationErrors = validate();
@@ -54,27 +53,23 @@ const AdminAddBook = () => {
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
-                        title,
-                        author,
-                        subject,
-                        ISBN: isbn,
+                        title: title.trim(),
+                        author: author.trim(),
+                        subject: subject.trim(),
+                        ISBN: isbn.trim(),
                     }),
                 }
             );
             if (!response.ok) {
                 const errorData = await response.json().catch(() => {
-                    throw new Error('Network response was not ok');
+                    throw new Error(JSON.stringify({message: "Internal Server Error"}));
                 });
-                throw new Error(errorData.error || 'Network response was not ok');
+                throw new Error(JSON.stringify(errorData.errors));
             }
-            setTitle("");
-            setAuthor("");
-            setSubject("");
-            setIsbn("");
             const data = await response.json();
             setSuccess(data.message);
         } catch (error) {
-            setResponseError(error.message);
+            setErrors(JSON.parse(error.message));
         } finally {
             setFormLoading(false);
         }
@@ -128,9 +123,10 @@ const AdminAddBook = () => {
                         fullWidth
                         margin="normal"
                         required
-                        error={!!errors.isbn}
-                        helperText={errors.isbn}
+                        error={!!errors.ISBN}
+                        helperText={errors.ISBN}
                     />
+                    {errors.message && <Typography color="error.main" sx={{ mt: 2 }}>{errors.message}</Typography>}
                     <Button
                         type="submit"
                         variant="contained"
@@ -145,8 +141,7 @@ const AdminAddBook = () => {
                     >
                         {formLoading ? 'Loading...' : 'Add Book'}
                     </Button>
-                    {responseError && <Typography color="error" sx={{ mt: 2 }}>{responseError}</Typography>}
-                    {success && <Typography color="success" sx={{ mt: 2 }}>{success}</Typography>}
+                    {success && <Typography color="success.main" sx={{ mt: 2 }}>{success}</Typography>}
                 </form>
             </Paper>
         </Container>
