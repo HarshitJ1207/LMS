@@ -31,31 +31,35 @@ exports.getLoginStatus = async (req, res) => {
 };
 
 exports.postLogin = async (req, res) => {
-	try {
-		let { username, password } = req.body;
-		username = username.toLowerCase();
-		username = username.trim();
-		console.log("Login attempt:", req.body);
-		const user = await User.findOne({
-			"username": username,
-			"password": password,
-		});
+    try {
+        let { identifier, password } = req.body;
+        identifier = identifier.toLowerCase().trim();
+        console.log("Login attempt:", req.body);
 
-		if (!user) {
-			return res.status(401).json({
-				error: "Email and Password do not match",
-			});
-		}
-		const token = jwt.sign(
-			{ username: user.username },
-			process.env.JWT_SECRET,
-			{ expiresIn: "24h" }
-		);
+        const user = await User.findOne({
+            $or: [
+                { email: identifier, password: password },
+                { username: identifier, password: password }
+            ]
+        });
+
+        if (!user) {
+            return res.status(401).json({
+                error: "Username/Email and Password do not match",
+            });
+        }
+
+        const token = jwt.sign(
+            { username: user.username },
+            process.env.JWT_SECRET,
+            { expiresIn: "24h" }
+        );
+
         res.status(200).json({ token, userType: user.details.userType });
-	} catch (error) {
-		console.error("Internal server error:", error);
-		return res.status(500).json({ error: error.message });
-	}
+    } catch (error) {
+        console.error("Internal server error:", error);
+        return res.status(500).json({ error: error.message });
+    }
 };
 
 exports.getBooks = async (req, res) => {

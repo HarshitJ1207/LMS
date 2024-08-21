@@ -10,7 +10,7 @@ import {
 
 function LoginForm() {
     const { login } = useContext(AuthContext);
-    const [formData, setFormData] = useState({ username: '', password: '' });
+    const [formData, setFormData] = useState({ identifier: '', password: '' });
     const [error, setError] = useState('');
     const [formLoading, setFormLoading] = useState(false);
     const navigate = useNavigate();
@@ -32,7 +32,7 @@ function LoginForm() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    username: formData.username.toLowerCase().trim(),
+                    identifier: formData.identifier.toLowerCase().trim(),
                     password: formData.password,
                 }),
             });
@@ -59,10 +59,10 @@ function LoginForm() {
             <Paper elevation={3} sx={{ m: 3, p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '80%', maxWidth: 600, mx: 'auto', mt: 5 }}> 
                 <form onSubmit={submitHandler}>
                     <TextField
-                        name="username"
+                        name="identifier"
                         type="text"
-                        label="Username"
-                        value={formData.username}
+                        label="Username or Email"
+                        value={formData.identifier}
                         onChange={handleChange}
                         fullWidth
                         margin="normal"
