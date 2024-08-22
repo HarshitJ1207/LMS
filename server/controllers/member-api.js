@@ -38,7 +38,7 @@ exports.postLogin = async (req, res) => {
 
         const user = await User.findOne({
             $or: [
-                { email: identifier, password: password },
+                { 'details.email': identifier, password: password },
                 { username: identifier, password: password }
             ]
         });
